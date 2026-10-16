@@ -13,7 +13,6 @@
     "Apple Color Emoji", "Segoe UI Emoji";
   --font-fa: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
 
-  /* Neutral "ink" scale — deep, slightly violet-tinted blacks */
   --color-ink-950: #06060b;
   --color-ink-900: #0a0a12;
   --color-ink-850: #0f0f18;
@@ -21,7 +20,6 @@
   --color-ink-700: #1c1c29;
   --color-ink-600: #262636;
 
-  /* Foreground "fog" scale */
   --color-fog-50: #f6f6fb;
   --color-fog-100: #ececf5;
   --color-fog-200: #d5d5e2;
@@ -29,7 +27,6 @@
   --color-fog-400: #8b8ba0;
   --color-fog-500: #6f6f85;
 
-  /* Brand — electric violet */
   --color-brand-200: #ddd6fe;
   --color-brand-300: #c4b5fd;
   --color-brand-400: #a78bfa;
@@ -37,11 +34,9 @@
   --color-brand-600: #7c3aed;
   --color-brand-700: #6d28d9;
 
-  /* Secondary accent — used only for the brand gradient */
   --color-magenta-400: #e879f9;
   --color-magenta-500: #d946ef;
 
-  /* Semantic */
   --color-gold-300: #fcd34d;
   --color-gold-400: #fbbf24;
   --color-danger-400: #fb7185;

@@ -7,7 +7,6 @@ export type SourceLink = {
   quality: string;
   type?: string;
   url: string;
-  /** A teaser/trailer rather than the feature itself. */
   isTrailer: boolean;
 };
 
@@ -55,7 +54,6 @@ export function getYear(media: APIMedia): string | undefined {
   return value;
 }
 
-/** Prefers the real IMDb score over the (often zero) `rating` field. */
 export function getRating(media: APIMedia): number {
   const imdb = toNumber(media.imdb);
   if (imdb > 0) return imdb;
@@ -128,11 +126,6 @@ const KNOWN_LABELS: Record<string, string> = {
   "وضعیت سریال": "وضعیت",
 };
 
-/**
- * The catalog returns `description` as a Persian multi-line block of
- * `label: value` pairs plus a plot summary. Splits that into an overview and
- * an ordered list of labelled fields.
- */
 export function parseDescription(description: unknown): ParsedDescription {
   if (typeof description !== "string" || !description.trim()) return { fields: [] };
 
@@ -164,7 +157,6 @@ export function parseDescription(description: unknown): ParsedDescription {
   return { overview, fields };
 }
 
-/** The ISO-ish quality string, e.g. "1080 زیرنویس" -> nice display label. */
 export function formatQuality(quality: string): string {
   return quality.replace(/\s+/g, " ").trim();
 }
@@ -191,4 +183,3 @@ export function getEpisodes(season: APISeason): Episode[] {
     return { key: `${id ?? index}-${index}`, id, title, sources: getSources(record) };
   });
 }
-

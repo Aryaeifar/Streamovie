@@ -6,7 +6,6 @@ import { useSeries } from "@/hooks/use-series";
 import type { APIMedia } from "@/lib/api/types";
 import { useSelectedMediaStore } from "@/stores/use-selected-media-store";
 
-/** Resolves details from the catalog endpoint, since the supplied API has no item-detail endpoint. */
 export function useMediaDetails(kind: "movie" | "series", mediaId: number) {
   const movies = useMovies();
   const series = useSeries();
