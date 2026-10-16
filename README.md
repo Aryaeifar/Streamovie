@@ -51,17 +51,6 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Environment variables
-
-| Variable | Required | Description |
-| --- | --- | --- |
-| `NEXT_PUBLIC_STREAMOVIE_API_KEY` | Yes | Key used by the browser to request catalog data. |
-| `NEXT_PUBLIC_STREAMOVIE_API_HOST` | No | Primary API host override. Defaults to `https://server-hi-speed-iran.info`. |
-| `NEXT_PUBLIC_STREAMOVIE_HELPER_HOST_1` | No | First fallback API host. Defaults to `https://hostinnegar.com`. |
-| `NEXT_PUBLIC_STREAMOVIE_HELPER_HOST_2` | No | Second fallback API host. Defaults to `https://windowsdiba.info`. |
-
-The app tries the configured hosts in order. Because variables prefixed with `NEXT_PUBLIC_` are included in the browser bundle, the API key is visible to users of a deployed site. Use a key intended for client-side use, restrict it where the API provider allows, and rotate it if it is exposed. Never commit a real key or put a private server credential in a `NEXT_PUBLIC_` variable.
-
 ## Available scripts
 
 | Command | Description |
