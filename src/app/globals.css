@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/vazirmatn-variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  --font-fa: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+
+  /* Neutral "ink" scale — deep, slightly violet-tinted blacks */
+  --color-ink-950: #06060b;
+  --color-ink-900: #0a0a12;
+  --color-ink-850: #0f0f18;
+  --color-ink-800: #14141f;
+  --color-ink-700: #1c1c29;
+  --color-ink-600: #262636;
+
+  /* Foreground "fog" scale */
+  --color-fog-50: #f6f6fb;
+  --color-fog-100: #ececf5;
+  --color-fog-200: #d5d5e2;
+  --color-fog-300: #a9a9bd;
+  --color-fog-400: #8b8ba0;
+  --color-fog-500: #6f6f85;
+
+  /* Brand — electric violet */
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+
+  /* Secondary accent — used only for the brand gradient */
+  --color-magenta-400: #e879f9;
+  --color-magenta-500: #d946ef;
+
+  /* Semantic */
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-danger-400: #fb7185;
+  --color-danger-500: #f43f5e;
+  --color-success-400: #34d399;
+
+  --radius-card: 1.25rem;
+  --radius-hero: 2rem;
+
+  --shadow-glow: 0 0 0 1px rgb(139 92 246 / 0.25), 0 18px 60px -18px rgb(139 92 246 / 0.55);
+  --shadow-lift: 0 24px 60px -24px rgb(0 0 0 / 0.9);
+
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: var(--color-ink-600) transparent;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--color-ink-950);
+    background-image:
+      radial-gradient(60rem 60rem at 15% -10%, rgb(124 58 237 / 0.18), transparent 60%),
+      radial-gradient(50rem 50rem at 100% 0%, rgb(217 70 239 / 0.12), transparent 55%);
+    background-attachment: fixed;
+    color: var(--color-fog-100);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  :lang(fa),
+  .font-fa {
+    font-family: var(--font-fa);
+  }
+
+  ::selection {
+    background: rgb(139 92 246 / 0.4);
+    color: white;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-400);
+    outline-offset: 2px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-600);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-fog-500);
+    background-clip: content-box;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility text-gradient-brand {
+  background-image: linear-gradient(100deg, var(--color-brand-300), var(--color-magenta-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility skeleton-sheen {
+  background-image: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0.04) 25%,
+    rgb(255 255 255 / 0.09) 37%,
+    rgb(255 255 255 / 0.04) 63%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
