@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowDownToLine,
   Bookmark,
@@ -22,6 +22,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SeriesEnrichment, SeriesEpisodeGuide } from "@/components/media/series-enrichment";
 import { useI18n } from "@/hooks/use-i18n";
 import { useMediaDetails } from "@/hooks/use-media-details";
 import { useSeasons } from "@/hooks/use-seasons";
@@ -99,15 +100,9 @@ function SourceLinks({ sources, emptyTitle, emptyBody }: { sources: SourceLink[]
 function DownloadPanel({ kind, media, seasons }: { kind: MediaKind; media: APIMedia; seasons: APISeason[] }) {
   const { t } = useI18n();
   const [seasonIndex, setSeasonIndex] = useState(0);
-  const [episodeIndex, setEpisodeIndex] = useState<number | null>(null);
 
   const episodes = useMemo(() => (seasons[seasonIndex] ? getEpisodes(seasons[seasonIndex]) : []), [seasons, seasonIndex]);
-  const selectedEpisode = episodeIndex === null ? undefined : episodes[episodeIndex];
   const movieSources = useMemo(() => getSources(media), [media]);
-
-  useEffect(() => {
-    setEpisodeIndex(null);
-  }, [seasonIndex]);
 
   const isMovie = kind === "movie";
 
@@ -152,50 +147,9 @@ function DownloadPanel({ kind, media, seasons }: { kind: MediaKind; media: APIMe
               </div>
             </div>
 
-            {episodes.length ? (
-              <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-widest text-fog-500">{t.details.episode}</span>
-                <div className="flex flex-wrap gap-2">
-                  {episodes.map((episode, index) => (
-                    <button
-                      key={episode.key}
-                      type="button"
-                      onClick={() => setEpisodeIndex(index)}
-                      aria-pressed={index === episodeIndex}
-                      className={cn(
-                        "rounded-lg border px-3 py-2 text-sm transition",
-                        index === episodeIndex
-                          ? "border-brand-400/60 bg-brand-500/15 text-white"
-                          : "border-white/10 bg-white/[0.03] text-fog-200 hover:border-white/25 hover:text-white",
-                      )}
-                    >
-                      {episode.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-fog-400">{t.details.noEpisodes}</p>
-            )}
-
-            {selectedEpisode ? (
-              <div className="space-y-4 border-t border-white/5 pt-6">
-                <h3 className="text-sm font-semibold text-fog-200">
-                  {t.details.availableLinks} <span className="font-normal text-fog-500">· {selectedEpisode.title}</span>
-                </h3>
-                <SourceLinks
-                  sources={selectedEpisode.sources}
-                  emptyTitle={t.details.noLinks}
-                  emptyBody={t.details.noLinksHint}
-                />
-              </div>
-            ) : (
-              <p className="rounded-xl border border-dashed border-white/12 px-4 py-6 text-center text-sm text-fog-400">
-                {t.details.selectSeasonFirst}
-              </p>
-            )}
           </>
         )}
+        {!isMovie ? <SeriesEpisodeGuide media={media} episodes={episodes} selectedSeason={seasonIndex + 1} /> : null}
       </div>
     </section>
   );
@@ -381,6 +335,8 @@ export function MediaDetails({ kind, mediaId }: { kind: MediaKind; mediaId: numb
             </div>
           </div>
         </section>
+
+        {kind === "series" ? <SeriesEnrichment media={media} /> : null}
 
         {parsed.fields.length ? (
           <section className="rounded-hero border border-white/10 bg-ink-900/70 p-5 sm:p-6">

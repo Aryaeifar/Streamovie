@@ -69,7 +69,7 @@ export function SearchBar() {
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <Search className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-fog-500" />
+      <Search className={cn("pointer-events-none absolute start-3.5 top-1/2 size-[17px] -translate-y-1/2 transition", open ? "text-brand-300" : "text-fog-500")} />
       <input
         ref={inputRef}
         value={query}
@@ -85,7 +85,10 @@ export function SearchBar() {
         aria-expanded={showPanel}
         aria-controls={listId}
         aria-autocomplete="list"
-        className="h-11 w-full rounded-full border border-white/10 bg-white/[0.06] ps-10 pe-10 text-sm text-fog-100 outline-none transition placeholder:text-fog-500 hover:border-white/20 focus:border-brand-400/60 focus:bg-white/[0.09]"
+        className={cn(
+          "h-11 w-full rounded-full border bg-ink-950/50 ps-10 pe-11 text-sm text-fog-100 outline-none transition placeholder:text-fog-500",
+          open ? "border-brand-400/35 bg-ink-950/75 shadow-[0_0_0_4px_rgb(var(--color-brand-500)/0.08)]" : "border-white/10 hover:border-white/20",
+        )}
       />
       {query ? (
         <button
@@ -95,7 +98,7 @@ export function SearchBar() {
             inputRef.current?.focus();
           }}
           aria-label={t.search.clear}
-          className="absolute end-3 top-1/2 -translate-y-1/2 text-fog-400 transition hover:text-white"
+          className="absolute end-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-fog-400 transition hover:bg-white/[0.08] hover:text-white"
         >
           <X className="size-4" />
         </button>
@@ -105,18 +108,21 @@ export function SearchBar() {
         <div
           id={listId}
           role="listbox"
-          className="absolute inset-x-0 top-14 z-50 overflow-hidden rounded-2xl border border-white/10 bg-ink-850/95 shadow-[var(--shadow-lift)] backdrop-blur-xl"
+          className="absolute inset-x-0 top-[calc(100%+0.65rem)] z-50 overflow-hidden rounded-2xl border border-white/[0.1] bg-ink-900/95 shadow-[0_24px_70px_-25px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
         >
-          <p className="border-b border-white/5 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-widest text-fog-500">
-            {results.isLoading ? t.search.searching : t.search.results}
-          </p>
+          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-fog-400">
+              {results.isLoading ? t.search.searching : t.search.results}
+            </p>
+            {!results.isLoading && !results.error ? <span className="rounded-full bg-white/[0.06] px-2 py-1 text-[10px] font-semibold tabular-nums text-fog-400">{items.length}</span> : null}
+          </div>
 
           {results.error ? (
             <p className="px-4 py-5 text-sm text-danger-400">
               {t.search.failed}: {results.error.message}
             </p>
           ) : items.length ? (
-            <ul className="max-h-[60vh] overflow-y-auto py-1">
+            <ul className="max-h-[min(60vh,520px)] overflow-y-auto p-1.5">
               {items.map((item, index) => {
                 const kind = getMediaKind(item);
                 const title = getTitle(item);
@@ -132,11 +138,11 @@ export function SearchBar() {
                       onMouseEnter={() => setActive(index)}
                       onClick={() => go(index)}
                       className={cn(
-                        "flex w-full items-center gap-3 px-3 py-2.5 text-start transition",
-                        index === active ? "bg-white/[0.07]" : "hover:bg-white/[0.04]",
+                        "flex w-full items-center gap-3 rounded-xl border border-transparent px-2.5 py-2 text-start transition",
+                        index === active ? "border-brand-400/15 bg-brand-500/[0.10]" : "hover:bg-white/[0.045]",
                       )}
                     >
-                      <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-ink-800">
+                      <span className="relative size-12 shrink-0 overflow-hidden rounded-lg border border-white/[0.07] bg-ink-800 sm:size-14">
                         {poster ? (
                           <Image src={poster} alt="" fill unoptimized sizes="56px" className="object-cover" />
                         ) : (

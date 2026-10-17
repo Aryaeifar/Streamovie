@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Film, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowLeft, Film, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { MediaCard } from "@/components/media/media-card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ const KINDS: BrowseKind[] = ["all", "movie", "series"];
 const SORTS: BrowseSort[] = ["created", "imdb"];
 
 const controlClass =
-  "h-11 rounded-xl border border-white/10 bg-white/[0.06] px-3.5 text-sm text-fog-100 outline-none transition hover:border-white/20 focus:border-brand-400/60 focus:bg-white/[0.09]";
+  "h-11 min-w-0 rounded-xl border border-white/10 bg-ink-900/70 px-3.5 text-sm text-fog-100 outline-none transition hover:border-white/20 focus:border-brand-400/60 focus:ring-2 focus:ring-brand-400/15 [&>option]:bg-ink-900";
 
 export function BrowseView({ category }: { category: BrowseCategory }) {
   const { t } = useI18n();
@@ -90,41 +90,43 @@ export function BrowseView({ category }: { category: BrowseCategory }) {
           </header>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-3 sm:p-4">
-          <div className="relative w-full">
-            <Search className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-fog-500" />
+        <div className="overflow-hidden rounded-3xl border border-white/[0.09] bg-gradient-to-br from-white/[0.055] to-white/[0.02] shadow-[0_18px_60px_-40px_rgba(0,0,0,0.8)]">
+          <div className="border-b border-white/[0.07] p-3 sm:p-4">
+            <div className="relative w-full">
+            <Search className="pointer-events-none absolute start-4 top-1/2 size-[18px] -translate-y-1/2 text-brand-300" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={format(t.browse.searchPlaceholder, { category: title })}
               aria-label={t.browse.searchLabel}
-              className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.06] ps-10 pe-10 text-sm text-fog-100 outline-none transition placeholder:text-fog-500 hover:border-white/20 focus:border-brand-400/60 focus:bg-white/[0.09]"
+              className="h-12 w-full rounded-2xl border border-white/[0.09] bg-ink-950/55 ps-11 pe-11 text-sm text-fog-100 outline-none transition placeholder:text-fog-500 hover:border-white/15 focus:border-brand-400/60 focus:bg-ink-950/80 focus:ring-4 focus:ring-brand-500/10 sm:h-[52px]"
             />
             {query ? (
               <button
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label={t.search.clear}
-                className="absolute end-3 top-1/2 -translate-y-1/2 text-fog-400 transition hover:text-white"
+                className="absolute end-3 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-fog-400 transition hover:bg-white/[0.08] hover:text-white"
               >
                 <X className="size-4" />
               </button>
             ) : null}
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-fog-500">
-              <SlidersHorizontal className="size-3.5" />
+          <div className="flex flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 sm:p-4">
+            <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-fog-400">
+              <span className="flex size-8 items-center justify-center rounded-xl bg-brand-500/10 text-brand-300"><SlidersHorizontal className="size-4" /></span>
               {t.browse.filters}
             </span>
 
-            <label className="inline-flex items-center gap-2 text-xs text-fog-400">
-              <span className="hidden sm:inline">{t.browse.type}</span>
+            <label className="flex min-w-0 flex-1 flex-col gap-1.5 text-[11px] font-medium text-fog-500 sm:min-w-36">
+              <span>{t.browse.type}</span>
               <select
                 value={kind}
                 onChange={(event) => setKind(event.target.value as BrowseKind)}
                 aria-label={t.browse.type}
-                className={controlClass}
+                className={cn(controlClass, kind !== category.kind && "border-brand-400/35 bg-brand-500/[0.08]")}
               >
                 {KINDS.map((value) => (
                   <option key={value} value={value}>
@@ -134,13 +136,13 @@ export function BrowseView({ category }: { category: BrowseCategory }) {
               </select>
             </label>
 
-            <label className="inline-flex items-center gap-2 text-xs text-fog-400">
-              <span className="hidden sm:inline">{t.browse.sort}</span>
+            <label className="flex min-w-0 flex-1 flex-col gap-1.5 text-[11px] font-medium text-fog-500 sm:min-w-36">
+              <span>{t.browse.sort}</span>
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as BrowseSort)}
                 aria-label={t.browse.sort}
-                className={controlClass}
+                className={cn(controlClass, sort !== category.sort && "border-brand-400/35 bg-brand-500/[0.08]")}
               >
                 {SORTS.map((value) => (
                   <option key={value} value={value}>
@@ -150,14 +152,14 @@ export function BrowseView({ category }: { category: BrowseCategory }) {
               </select>
             </label>
 
-            <label className="inline-flex items-center gap-2 text-xs text-fog-400">
-              <span className="hidden sm:inline">{t.browse.genre}</span>
+            <label className="flex min-w-0 flex-1 flex-col gap-1.5 text-[11px] font-medium text-fog-500 sm:min-w-40">
+              <span>{t.browse.genre}</span>
               <select
                 value={genreId}
                 onChange={(event) => setGenreId(Number(event.target.value))}
                 aria-label={t.browse.genre}
                 disabled={searching}
-                className={cn(controlClass, "max-w-[12rem] disabled:cursor-not-allowed disabled:opacity-50")}
+                className={cn(controlClass, "w-full disabled:cursor-not-allowed disabled:opacity-40", genreId > 0 && "border-brand-400/35 bg-brand-500/[0.08]")}
               >
                 <option value={0}>{t.browse.allGenres}</option>
                 {(genres.data ?? []).map((genre) => (
@@ -167,7 +169,14 @@ export function BrowseView({ category }: { category: BrowseCategory }) {
                 ))}
               </select>
             </label>
+            {genreId > 0 || kind !== category.kind || sort !== category.sort || query ? (
+              <button type="button" onClick={() => { setQuery(""); setKind(category.kind); setSort(category.sort); setGenreId(0); }}
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-end rounded-xl border border-white/10 px-3 text-xs font-semibold text-fog-300 transition hover:border-white/20 hover:bg-white/[0.06] hover:text-white">
+                <X className="size-3.5" />{t.browse.clearFilters}
+              </button>
+            ) : null}
           </div>
+          {searching ? <div className="flex items-center gap-2 px-4 pb-3 text-xs text-fog-500 sm:px-5"><Sparkles className="size-3.5 text-brand-300" />{t.browse.searchingFor} <span className="max-w-[65%] truncate font-medium text-fog-300">“{debounced.trim()}”</span></div> : null}
         </div>
 
         {showSkeletons ? (

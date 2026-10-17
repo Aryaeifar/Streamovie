@@ -27,7 +27,7 @@ export function sidebarNav(t: Dictionary): NavSection[] {
   ];
 }
 
-/** Flat navigation used by the mobile bottom bar (max 5 items). */
+/** Flat navigation used by the mobile bottom bar. */
 export function mobileNav(t: Dictionary): NavItem[] {
   return [
     { href: "/", label: t.nav.home, icon: Home },
