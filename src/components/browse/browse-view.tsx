@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Film, Search, SlidersHorizontal, X } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
@@ -10,6 +10,7 @@ import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VirtualGrid } from "@/components/ui/virtual-grid";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useGenres } from "@/hooks/use-genres";
 import { format, useI18n } from "@/hooks/use-i18n";
@@ -55,6 +56,11 @@ export function BrowseView({ category }: { category: BrowseCategory }) {
   const loading = searching ? search.isLoading : list.isLoading;
   const error = searching ? search.error : list.error;
   const showSkeletons = loading && items.length === 0;
+
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = list;
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const kindLabel = (value: BrowseKind) =>
     value === "movie" ? t.browse.movies : value === "series" ? t.browse.series : t.browse.allTypes;
@@ -179,25 +185,20 @@ export function BrowseView({ category }: { category: BrowseCategory }) {
           />
         ) : items.length ? (
           <>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {items.map(({ media, kind: itemKind }, index) => (
-                <MediaCard
-                  key={`${itemKind}-${media.id}-${index}`}
-                  media={media}
-                  kind={itemKind}
-                  onSelect={() => setSelectedMedia(itemKind, media)}
-                />
-              ))}
-            </div>
+            <VirtualGrid
+              items={items}
+              getKey={(item, index) => `${item.kind}-${item.media.id}-${index}`}
+              renderItem={({ media, kind: itemKind }) => (
+                <MediaCard media={media} kind={itemKind} onSelect={() => setSelectedMedia(itemKind, media)} />
+              )}
+              estimateRowHeight={(columnWidth) => columnWidth * 1.5 + 96}
+              onEndReached={searching ? undefined : loadMore}
+            />
 
             {!searching && list.hasNextPage ? (
-              <div className="flex justify-center pt-4">
-                <Button
-                  variant="secondary"
-                  onClick={() => list.fetchNextPage()}
-                  loading={list.isFetchingNextPage}
-                >
-                  {list.isFetchingNextPage ? t.browse.loadingMore : t.browse.loadMore}
+              <div className="flex justify-center pt-6">
+                <Button variant="secondary" onClick={loadMore} loading={isFetchingNextPage}>
+                  {isFetchingNextPage ? t.browse.loadingMore : t.browse.loadMore}
                 </Button>
               </div>
             ) : null}
