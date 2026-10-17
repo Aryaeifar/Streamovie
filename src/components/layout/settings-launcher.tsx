@@ -90,7 +90,7 @@ export function SettingsLauncher() {
         aria-label={t.settings.open}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="fixed end-0 top-1/2 z-40 flex -translate-y-1/2 items-center justify-center rounded-s-2xl border border-e-0 border-white/10 bg-ink-850/90 px-2.5 py-3 text-fog-300 shadow-[var(--shadow-lift)] backdrop-blur-xl transition hover:bg-ink-800 hover:text-white lg:hidden"
+        className="fixed end-0 top-1/2 z-[55] flex -translate-y-1/2 items-center justify-center rounded-s-2xl border border-e-0 border-white/10 bg-ink-850/95 px-2.5 py-3 text-fog-300 shadow-[var(--shadow-lift)] backdrop-blur-xl transition hover:bg-ink-800 hover:text-white"
       >
         <Settings className="size-5" />
       </button>

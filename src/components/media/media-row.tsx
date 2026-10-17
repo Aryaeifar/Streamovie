@@ -74,7 +74,7 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, 
       {loading ? (
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: 7 }, (_, index) => (
-            <Skeleton key={index} className="aspect-[2/3] w-40 shrink-0 rounded-card sm:w-44" />
+            <Skeleton key={index} className="aspect-[2/3] w-48 shrink-0 rounded-card sm:w-56 lg:w-60" />
           ))}
         </div>
       ) : error ? (
@@ -91,7 +91,7 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, 
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
-              className="w-40 shrink-0 snap-start sm:w-44"
+              className="w-48 shrink-0 snap-start sm:w-56 lg:w-60"
             >
               <MediaCard media={media} kind={kind} onSelect={() => setSelectedMedia(kind, media)} />
             </motion.div>

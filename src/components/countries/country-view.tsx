@@ -63,7 +63,7 @@ export function CountryView({ countryId }: { countryId: number }) {
           {query.data ? <span className="ms-auto self-center text-sm text-fog-400">{format(t.browse.results, { count: items.length })}</span> : null}
         </div>
 
-        {query.isLoading ? <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">{Array.from({ length: 12 }, (_, i) => <Skeleton key={i} className="aspect-[2/3] rounded-card" />)}</div>
+        {query.isLoading ? <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">{Array.from({ length: 12 }, (_, i) => <Skeleton key={i} className="aspect-[2/3] rounded-card" />)}</div>
           : query.error ? <ErrorState title={t.browse.loadError} description={query.error.message} retryLabel={t.actions.retry} onRetry={() => void query.refetch()} />
             : items.length ? <>
               <VirtualGrid items={items} getKey={(item, index) => `${item.kind}-${item.media.id}-${index}`}

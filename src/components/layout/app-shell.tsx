@@ -6,20 +6,17 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { useI18n } from "@/hooks/use-i18n";
-import { useUIStore } from "@/stores/use-ui-store";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children, className }: { children: ReactNode; className?: string }) {
   const { t } = useI18n();
-  const collapsed = useUIStore((state) => state.sidebarCollapsed);
 
   return (
     <div className="min-h-dvh">
       <Sidebar />
       <div
         className={cn(
-          "flex min-h-dvh flex-col pb-[calc(3.75rem+env(safe-area-inset-bottom))] transition-[padding] duration-300 ease-out lg:pb-0",
-          collapsed ? "lg:ps-20" : "lg:ps-[280px]",
+          "relative flex min-h-dvh flex-col pb-[calc(3.75rem+env(safe-area-inset-bottom))] transition-[padding] duration-300 ease-out lg:ps-[72px] lg:pb-0",
         )}
       >
         <a

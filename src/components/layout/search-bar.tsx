@@ -71,6 +71,7 @@ export function SearchBar() {
     <div ref={containerRef} className="relative w-full">
       <Search className={cn("pointer-events-none absolute start-3.5 top-1/2 size-[17px] -translate-y-1/2 transition", open ? "text-brand-300" : "text-fog-500")} />
       <input
+        id="site-search"
         ref={inputRef}
         value={query}
         onChange={(event) => {

@@ -50,7 +50,7 @@ export default function HomePage() {
         </Container>
       )}
 
-      <Container className="space-y-12 pb-10 pt-12">
+      <Container className="space-y-10 pb-10 pt-7 sm:pt-9">
         <MediaRow
           id="trending"
           title={t.home.trending}
