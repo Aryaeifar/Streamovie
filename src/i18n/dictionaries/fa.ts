@@ -198,6 +198,7 @@ const fa: Dictionary = {
     description: "ظاهر و زبان استریم‌مووی را شخصی‌سازی کنید.",
     theme: "پوسته",
     themes: {
+      netflix: "نتفلیکس",
       midnight: "نیمه‌شب",
       aurora: "شفق",
       ocean: "اقیانوس",

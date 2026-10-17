@@ -133,7 +133,7 @@ export default function HomePage() {
         </Container>
       )}
 
-      <Container className="space-y-10 pb-10 pt-7 sm:pt-9">
+      <Container className="space-y-8 px-4 pb-10 pt-5 sm:space-y-10 sm:px-6 sm:pt-8 lg:px-10">
         <MediaRow
           id="trending"
           title={t.home.trending}

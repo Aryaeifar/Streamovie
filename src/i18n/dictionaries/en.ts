@@ -196,6 +196,7 @@ const en = {
     description: "Personalize how Streamovie looks and reads.",
     theme: "Theme",
     themes: {
+      netflix: "Netflix",
       midnight: "Midnight",
       aurora: "Aurora",
       ocean: "Ocean",

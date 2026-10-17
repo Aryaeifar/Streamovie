@@ -89,7 +89,7 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
   const liked = hydrated && likes.includes(media.id);
 
   return (
-    <section id="featured" className="scroll-mt-20 relative isolate min-h-[620px] w-full overflow-hidden bg-ink-950 sm:min-h-[680px] lg:min-h-[min(76svh,820px)]">
+    <section id="featured" className="scroll-mt-20 relative isolate min-h-[680px] w-full overflow-hidden bg-ink-950 sm:min-h-[720px] lg:min-h-[min(76svh,820px)]">
       <AnimatePresence mode="popLayout">
         <motion.div
           key={`${kind}-${media.id}`}
@@ -123,6 +123,14 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
         style={{
           backgroundImage: `linear-gradient(${isRtl ? "270deg" : "90deg"}, color-mix(in srgb, var(--color-ink-950) 96%, transparent) 0%, color-mix(in srgb, var(--color-ink-950) 84%, transparent) 26%, color-mix(in srgb, var(--color-ink-950) 36%, transparent) 58%, transparent 100%)`,
         }}
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 -z-10 lg:hidden"
+        style={{
+          backgroundImage: `linear-gradient(0deg, var(--color-ink-950) 3%, color-mix(in srgb, var(--color-ink-950) 88%, transparent) 27%, color-mix(in srgb, var(--color-ink-950) 25%, transparent) 56%, transparent 100%)`,
+        }}
+        aria-hidden
       />
       <div
         className="absolute inset-0 -z-10"
@@ -131,7 +139,7 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
         }}
       />
 
-      <div className="relative flex min-h-[620px] flex-col gap-8 px-5 pb-8 pt-12 sm:min-h-[680px] sm:px-9 sm:pb-10 lg:min-h-[min(76svh,820px)] lg:px-14 lg:pb-12 lg:pt-10">
+      <div className="relative flex min-h-[680px] flex-col gap-6 px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-24 sm:min-h-[720px] sm:gap-8 sm:px-8 sm:pb-10 sm:pt-28 md:px-10 lg:min-h-[min(76svh,820px)] lg:px-14 lg:pb-12 lg:pt-10">
         <div className="flex flex-1 flex-col justify-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -163,7 +171,7 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
               <h1
                 lang={isPersianText(title) ? "fa" : "en"}
                 dir={isPersianText(title) ? "rtl" : "ltr"}
-                className="mt-3 text-balance text-5xl font-black uppercase leading-[0.93] tracking-tight text-white drop-shadow-2xl sm:text-6xl lg:text-7xl xl:text-8xl"
+                className="mt-3 text-balance text-4xl font-black uppercase leading-[0.98] tracking-tight text-white drop-shadow-2xl min-[390px]:text-5xl sm:text-6xl lg:text-7xl xl:text-8xl"
               >
                 {title}
               </h1>
@@ -172,17 +180,17 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
                 <p
                   lang={isPersianText(overview) ? "fa" : "en"}
                   dir={isPersianText(overview) ? "rtl" : "ltr"}
-                  className="mt-4 line-clamp-3 max-w-xl text-sm leading-6 text-fog-100/90 sm:text-base sm:leading-7"
+                  className="mt-3 line-clamp-3 max-w-xl text-[13px] leading-6 text-fog-100/90 sm:mt-4 sm:text-base sm:leading-7"
                 >
                   {overview}
                 </p>
               ) : null}
 
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-2.5 sm:mt-7 sm:gap-3">
                 <Link
                   href={href}
                   onClick={() => setSelectedMedia(kind, media)}
-                  className="inline-flex h-12 items-center gap-2 rounded-lg bg-brand-500 px-7 text-sm font-bold text-ink-950 shadow-glow transition hover:bg-brand-400"
+                  className="inline-flex h-11 items-center gap-2 rounded-lg bg-brand-500 px-5 text-xs font-bold text-ink-950 shadow-glow transition hover:bg-brand-400 sm:h-12 sm:px-7 sm:text-sm"
                 >
                   <Play className="size-4" fill="currentColor" />
                   {t.actions.watchNow}
@@ -190,7 +198,7 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
                 <Link
                   href={href}
                   onClick={() => setSelectedMedia(kind, media)}
-                  className="inline-flex h-12 items-center gap-2 rounded-lg border border-white/30 bg-black/20 px-7 text-sm font-semibold text-white backdrop-blur transition hover:border-white/60 hover:bg-white/10"
+                  className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/30 bg-black/20 px-4 text-xs font-semibold text-white backdrop-blur transition hover:border-white/60 hover:bg-white/10 sm:h-12 sm:px-7 sm:text-sm"
                 >
                   <Play className="size-4" />
                   {t.actions.watchTrailer}
@@ -200,8 +208,8 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
           </AnimatePresence>
         </div>
 
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-5">
-          <div className="no-scrollbar -mx-1 flex max-w-full items-end gap-3 overflow-x-auto px-1 pb-1">
+        <div className="flex flex-col-reverse items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-x-6 sm:gap-y-5">
+          <div className="no-scrollbar -mx-4 flex max-w-[calc(100%+2rem)] items-end gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:max-w-full sm:gap-3 sm:px-1">
             {spotlight.map((item, i) => {
               const active = i === safeIndex;
               const image = getCover(item.media) ?? getPoster(item.media);
@@ -217,7 +225,7 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
                 >
                   <span
                     className={cn(
-                      "relative block h-[62px] w-[108px] overflow-hidden rounded-md border transition sm:h-[70px] sm:w-[124px]",
+                      "relative block h-[54px] w-[88px] overflow-hidden rounded-md border transition min-[390px]:h-[58px] min-[390px]:w-[100px] sm:h-[70px] sm:w-[124px]",
                       active ? "border-brand-400 ring-1 ring-brand-400/60" : "border-white/15 opacity-55 hover:opacity-100",
                     )}
                   >
@@ -233,7 +241,7 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
             })}
           </div>
 
-          <div className="ms-auto flex items-center gap-3">
+          <div className="ms-auto flex items-center justify-end gap-2.5 sm:gap-3">
             <button
               type="button"
               onClick={() => toggleLike(media.id)}

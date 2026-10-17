@@ -33,7 +33,8 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, 
   const setSelectedMedia = useSelectedMediaStore((state) => state.setSelectedMedia);
 
   const scrollBy = (direction: number) => {
-    scroller.current?.scrollBy({ left: direction * 560, behavior: "smooth" });
+    const distance = Math.max(280, (scroller.current?.clientWidth ?? 560) * 0.8);
+    scroller.current?.scrollBy({ left: direction * distance, behavior: "smooth" });
   };
 
   const nav = (
@@ -68,7 +69,7 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, 
       <SectionHeading
         title={title}
         subtitle={subtitle ?? (items?.length ? format(t.home.titlesCount, { count: items.length }) : undefined)}
-        actions={nav}
+        actions={<div className="hidden sm:flex sm:items-center sm:gap-2">{nav}</div>}
       />
 
       {loading ? (
@@ -82,7 +83,7 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, 
       ) : items?.length ? (
         <div
           ref={scroller}
-          className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-2"
+          className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:-mx-1 sm:gap-4 sm:px-1"
         >
           {items.map(({ media, kind }, index) => (
             <motion.div
@@ -91,7 +92,7 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, 
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
-              className="w-48 shrink-0 snap-start sm:w-56 lg:w-60"
+              className="w-[42vw] max-w-[184px] shrink-0 snap-start min-[390px]:w-[44vw] sm:w-52 sm:max-w-none md:w-56 lg:w-60"
             >
               <MediaCard media={media} kind={kind} onSelect={() => setSelectedMedia(kind, media)} />
             </motion.div>

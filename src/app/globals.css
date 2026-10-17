@@ -170,9 +170,61 @@
  * ── Themes ────────────────────────────────────────────────────────────────
  * Each theme overrides the surface (ink-*), accent (brand-*) and secondary
  * (magenta-*) tokens plus the ambient glow colors used by the page background.
- * The default `midnight` theme comes from the @theme tokens above.
+ * The default `netflix` theme is applied to the base tokens below.
  */
 :root {
+  --color-ink-950: #080808;
+  --color-ink-900: #101010;
+  --color-ink-850: #171717;
+  --color-ink-800: #202020;
+  --color-ink-700: #292929;
+  --color-ink-600: #383838;
+  --color-brand-200: #fecaca;
+  --color-brand-300: #fca5a5;
+  --color-brand-400: #f87171;
+  --color-brand-500: #e50914;
+  --color-brand-600: #c40812;
+  --color-brand-700: #a4060f;
+  --color-magenta-400: #fb7185;
+  --color-magenta-500: #e50914;
+  --theme-glow-1: 229 9 20;
+  --theme-glow-2: 178 7 16;
+}
+
+:root[data-theme="netflix"] {
+  --color-ink-950: #080808;
+  --color-ink-900: #101010;
+  --color-ink-850: #171717;
+  --color-ink-800: #202020;
+  --color-ink-700: #292929;
+  --color-ink-600: #383838;
+  --color-brand-200: #fecaca;
+  --color-brand-300: #fca5a5;
+  --color-brand-400: #f87171;
+  --color-brand-500: #e50914;
+  --color-brand-600: #c40812;
+  --color-brand-700: #a4060f;
+  --color-magenta-400: #fb7185;
+  --color-magenta-500: #e50914;
+  --theme-glow-1: 229 9 20;
+  --theme-glow-2: 178 7 16;
+}
+
+:root[data-theme="midnight"] {
+  --color-ink-950: #06060b;
+  --color-ink-900: #0a0a12;
+  --color-ink-850: #0f0f18;
+  --color-ink-800: #14141f;
+  --color-ink-700: #1c1c29;
+  --color-ink-600: #262636;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-magenta-400: #e879f9;
+  --color-magenta-500: #d946ef;
   --theme-glow-1: 139 92 246;
   --theme-glow-2: 217 70 239;
 }

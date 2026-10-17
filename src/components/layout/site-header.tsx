@@ -51,12 +51,12 @@ export function SiteHeader() {
 
     return (
       <header
-        className="pointer-events-none fixed inset-x-0 top-3 z-40 h-[64px] w-full px-2 sm:px-4 lg:px-6"
+        className="pointer-events-none fixed inset-x-0 top-2 z-40 h-[76px] w-full px-2 sm:top-3 sm:h-[64px] sm:px-4 lg:px-6"
       >
         <LayoutGroup id="landing-section-tabs">
           <nav
             aria-label={t.nav.menu}
-            className="pointer-events-auto absolute left-1/2 top-1/2 grid w-[calc(100%-1rem)] max-w-[960px] -translate-x-1/2 -translate-y-1/2 grid-cols-3 gap-1 rounded-[1.35rem] border border-white/[0.09] bg-black/35 p-1.5 shadow-xl backdrop-blur-xl md:flex md:justify-between md:rounded-full"
+            className="pointer-events-auto absolute left-1/2 top-1/2 grid w-[calc(100%-1rem)] max-w-[960px] -translate-x-1/2 -translate-y-1/2 grid-cols-3 gap-0.5 rounded-[1.15rem] border border-white/[0.09] bg-black/45 p-1 shadow-xl backdrop-blur-xl min-[390px]:gap-1 min-[390px]:p-1.5 sm:rounded-full md:flex md:justify-between"
           >
             {tabs.map(([sectionId, label]) => {
               const active = activeSection === sectionId;
@@ -71,7 +71,7 @@ export function SiteHeader() {
                   }}
                   whileTap={{ scale: 0.96 }}
                   className={cn(
-                    "relative min-w-0 rounded-full px-2 py-2 text-center text-sm font-bold leading-tight transition-colors md:flex-1 md:px-3 md:py-2",
+                    "relative min-w-0 rounded-full px-1 py-2 text-center text-[11px] font-bold leading-tight transition-colors min-[390px]:px-1.5 min-[390px]:text-xs sm:px-2 sm:text-sm md:flex-1 md:px-3 md:py-2",
                     active ? "text-[#111]" : "text-white/65 hover:text-white",
                   )}
                 >
