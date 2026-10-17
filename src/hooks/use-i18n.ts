@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { getDictionary, getDirection } from "@/i18n";
 import { useUIStore } from "@/stores/use-ui-store";
+
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function format(template: string, values: Record<string, string | number>) {
   return template.replace(/\{(\w+)\}/g, (match, key) => (key in values ? String(values[key]) : match));
@@ -16,7 +18,7 @@ export function useI18n() {
   const dir = getDirection(locale);
   const t = getDictionary(locale);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const root = document.documentElement;
     root.lang = locale;
     root.dir = dir;
