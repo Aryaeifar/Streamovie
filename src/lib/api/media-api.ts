@@ -1,5 +1,5 @@
 import { apiKey, requestWithFallback, requireApiKey } from "@/lib/api/client";
-import type { APISeason, APIMedia, MediaSort, SearchResponse } from "@/lib/api/types";
+import type { APIGenre, APISeason, APIMedia, MediaSort, SearchResponse } from "@/lib/api/types";
 
 function key() {
   return encodeURIComponent(requireApiKey());
@@ -20,6 +20,10 @@ export const mediaApi = {
 
   fetchSeasons(seriesId: number) {
     return requestWithFallback<APISeason[]>(`/api/season/by/serie/${seriesId}/${key()}/`);
+  },
+
+  fetchGenres() {
+    return requestWithFallback<APIGenre[]>(`/api/genre/all/${key()}/`);
   },
 };
 

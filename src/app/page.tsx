@@ -60,6 +60,7 @@ export default function HomePage() {
             movies.refetch();
             series.refetch();
           }}
+          moreHref="/browse/trending"
         />
         <MediaRow
           id="movies"
@@ -69,6 +70,7 @@ export default function HomePage() {
           loading={movies.isLoading}
           error={movies.error}
           onRetry={() => movies.refetch()}
+          moreHref="/browse/movies"
         />
         <MediaRow
           id="series"
@@ -78,6 +80,7 @@ export default function HomePage() {
           loading={series.isLoading}
           error={series.error}
           onRetry={() => series.refetch()}
+          moreHref="/browse/series"
         />
         <MediaRow
           id="imdb-movies"
@@ -87,6 +90,7 @@ export default function HomePage() {
           loading={topMovies.isLoading}
           error={topMovies.error}
           onRetry={() => topMovies.refetch()}
+          moreHref="/browse/imdb-movies"
         />
         <MediaRow
           id="imdb-series"
@@ -96,6 +100,7 @@ export default function HomePage() {
           loading={topSeries.isLoading}
           error={topSeries.error}
           onRetry={() => topSeries.refetch()}
+          moreHref="/browse/imdb-series"
         />
       </Container>
     </AppShell>

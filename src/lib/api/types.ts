@@ -19,6 +19,13 @@ export interface APISeason {
   [key: string]: unknown;
 }
 
+export interface APIGenre {
+  id: number;
+  title?: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
 export interface SearchResponse {
   posters: APIMedia[];
 }

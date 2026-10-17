@@ -10,12 +10,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format, useI18n } from "@/hooks/use-i18n";
 import { useLibraryHydrated } from "@/hooks/use-library-hydrated";
 import { useLibraryStore } from "@/stores/use-library-store";
+import { useSelectedMediaStore } from "@/stores/use-selected-media-store";
 
 export default function BookmarksPage() {
   const { t } = useI18n();
   const hydrated = useLibraryHydrated();
   const watchlist = useLibraryStore((state) => state.watchlist);
   const savedMedia = useLibraryStore((state) => state.savedMedia);
+  const setSelectedMedia = useSelectedMediaStore((state) => state.setSelectedMedia);
   const saved = watchlist.map((id) => ({ id, ...savedMedia[id] })).filter((item) => item.media && item.kind);
 
   return (
@@ -43,7 +45,12 @@ export default function BookmarksPage() {
         ) : saved.length ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {saved.map(({ id, media, kind }) => (
-              <MediaCard key={`${kind}-${id}`} media={media!} kind={kind!} />
+              <MediaCard
+                key={`${kind}-${id}`}
+                media={media!}
+                kind={kind!}
+                onSelect={() => setSelectedMedia(kind!, media!)}
+              />
             ))}
           </div>
         ) : (

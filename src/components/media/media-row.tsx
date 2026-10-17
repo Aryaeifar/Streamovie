@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion } from "motion/react";
 import { ChevronLeft, ChevronRight, Film } from "lucide-react";
 import { MediaCard } from "@/components/media/media-card";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { APIMedia } from "@/lib/api/types";
 import type { MediaKind } from "@/lib/media";
 import { format, useI18n } from "@/hooks/use-i18n";
+import { useSelectedMediaStore } from "@/stores/use-selected-media-store";
 
 export type RowItem = { media: APIMedia; kind: MediaKind };
 
@@ -23,11 +24,13 @@ type MediaRowProps = {
   loading?: boolean;
   error?: Error | null;
   onRetry?: () => void;
+  moreHref?: string;
 };
 
-export function MediaRow({ id, title, subtitle, items, loading, error, onRetry }: MediaRowProps) {
+export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, moreHref }: MediaRowProps) {
   const { t } = useI18n();
   const scroller = useRef<HTMLDivElement>(null);
+  const setSelectedMedia = useSelectedMediaStore((state) => state.setSelectedMedia);
 
   const scrollBy = (direction: number) => {
     scroller.current?.scrollBy({ left: direction * 560, behavior: "smooth" });
@@ -51,6 +54,12 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry }
       >
         <ChevronRight className="size-4 rtl:rotate-180" />
       </Button>
+      {moreHref ? (
+        <ButtonLink href={moreHref} variant="secondary" size="sm" className="ms-0.5">
+          {t.actions.seeMore}
+          <ChevronRight className="size-4 rtl:rotate-180" />
+        </ButtonLink>
+      ) : null}
     </>
   );
 
@@ -84,7 +93,7 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry }
               transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
               className="w-40 shrink-0 snap-start sm:w-44"
             >
-              <MediaCard media={media} kind={kind} />
+              <MediaCard media={media} kind={kind} onSelect={() => setSelectedMedia(kind, media)} />
             </motion.div>
           ))}
         </div>

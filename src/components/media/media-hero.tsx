@@ -10,6 +10,7 @@ import { getCover, getGenres, getPoster, getRating, getTitle, getYear, parseDesc
 import { isPersianText } from "@/lib/text";
 import type { APIMedia } from "@/lib/api/types";
 import { useI18n } from "@/hooks/use-i18n";
+import { useSelectedMediaStore } from "@/stores/use-selected-media-store";
 import { cn } from "@/lib/utils";
 
 export type HeroItem = { media: APIMedia; kind: MediaKind };
@@ -17,6 +18,7 @@ export type HeroItem = { media: APIMedia; kind: MediaKind };
 export function MediaHero({ items }: { items: HeroItem[] }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
+  const setSelectedMedia = useSelectedMediaStore((state) => state.setSelectedMedia);
 
   useEffect(() => {
     if (items.length < 2) return;
@@ -111,7 +113,11 @@ export function MediaHero({ items }: { items: HeroItem[] }) {
             ) : null}
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <ButtonLink href={`/${kind === "movie" ? "movies" : "series"}/${media.id}`} size="lg">
+              <ButtonLink
+                href={`/${kind === "movie" ? "movies" : "series"}/${media.id}`}
+                size="lg"
+                onClick={() => setSelectedMedia(kind, media)}
+              >
                 <Play className="size-4" fill="currentColor" />
                 {t.actions.view}
               </ButtonLink>
