@@ -134,6 +134,21 @@ const fa: Dictionary = {
     english: "English",
     persian: "فارسی",
   },
+  settings: {
+    title: "تنظیمات",
+    open: "باز کردن تنظیمات",
+    close: "بستن تنظیمات",
+    description: "ظاهر و زبان استریم‌مووی را شخصی‌سازی کنید.",
+    theme: "پوسته",
+    themes: {
+      midnight: "نیمه‌شب",
+      aurora: "شفق",
+      ocean: "اقیانوس",
+      sunset: "غروب",
+      candy: "آب‌نباتی",
+      noir: "تک‌رنگ",
+    },
+  },
 };
 
 export default fa;

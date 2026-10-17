@@ -2,7 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { LocaleHydrator } from "@/components/providers/locale-hydrator";
+import { PreferencesHydrator } from "@/components/providers/preferences-hydrator";
+import { SettingsLauncher } from "@/components/layout/settings-launcher";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -20,7 +21,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LocaleHydrator />
+      <PreferencesHydrator />
+      <SettingsLauncher />
       {children}
     </QueryClientProvider>
   );

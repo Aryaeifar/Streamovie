@@ -132,6 +132,21 @@ const en = {
     english: "English",
     persian: "فارسی",
   },
+  settings: {
+    title: "Settings",
+    open: "Open settings",
+    close: "Close settings",
+    description: "Personalize how Streamovie looks and reads.",
+    theme: "Theme",
+    themes: {
+      midnight: "Midnight",
+      aurora: "Aurora",
+      ocean: "Ocean",
+      sunset: "Sunset",
+      candy: "Candy",
+      noir: "Noir",
+    },
+  },
 } as const;
 
 type DeepWiden<T> = {

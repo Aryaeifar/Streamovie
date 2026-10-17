@@ -46,7 +46,8 @@
   --radius-card: 1.25rem;
   --radius-hero: 2rem;
 
-  --shadow-glow: 0 0 0 1px rgb(139 92 246 / 0.25), 0 18px 60px -18px rgb(139 92 246 / 0.55);
+  --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--color-brand-500) 25%, transparent),
+    0 18px 60px -18px color-mix(in oklab, var(--color-brand-500) 55%, transparent);
   --shadow-lift: 0 24px 60px -24px rgb(0 0 0 / 0.9);
 
   --animate-shimmer: shimmer 1.8s linear infinite;
@@ -87,8 +88,8 @@
     min-height: 100dvh;
     background-color: var(--color-ink-950);
     background-image:
-      radial-gradient(60rem 60rem at 15% -10%, rgb(124 58 237 / 0.18), transparent 60%),
-      radial-gradient(50rem 50rem at 100% 0%, rgb(217 70 239 / 0.12), transparent 55%);
+      radial-gradient(60rem 60rem at 15% -10%, rgb(var(--theme-glow-1) / 0.18), transparent 60%),
+      radial-gradient(50rem 50rem at 100% 0%, rgb(var(--theme-glow-2) / 0.12), transparent 55%);
     background-attachment: fixed;
     color: var(--color-fog-100);
     font-family: var(--font-sans);
@@ -102,7 +103,7 @@
   }
 
   ::selection {
-    background: rgb(139 92 246 / 0.4);
+    background: color-mix(in oklab, var(--color-brand-500) 45%, transparent);
     color: white;
   }
 
@@ -163,4 +164,110 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/*
+ * ── Themes ────────────────────────────────────────────────────────────────
+ * Each theme overrides the surface (ink-*), accent (brand-*) and secondary
+ * (magenta-*) tokens plus the ambient glow colors used by the page background.
+ * The default `midnight` theme comes from the @theme tokens above.
+ */
+:root {
+  --theme-glow-1: 139 92 246;
+  --theme-glow-2: 217 70 239;
+}
+
+:root[data-theme="aurora"] {
+  --color-ink-950: #04090a;
+  --color-ink-900: #071011;
+  --color-ink-850: #0b1718;
+  --color-ink-800: #101d1e;
+  --color-ink-700: #17282a;
+  --color-ink-600: #213436;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-magenta-400: #67e8f9;
+  --color-magenta-500: #22d3ee;
+  --theme-glow-1: 16 185 129;
+  --theme-glow-2: 34 211 238;
+}
+
+:root[data-theme="ocean"] {
+  --color-ink-950: #04070f;
+  --color-ink-900: #070c18;
+  --color-ink-850: #0b1220;
+  --color-ink-800: #101828;
+  --color-ink-700: #172138;
+  --color-ink-600: #1f2c48;
+  --color-brand-200: #bae6fd;
+  --color-brand-300: #7dd3fc;
+  --color-brand-400: #38bdf8;
+  --color-brand-500: #0ea5e9;
+  --color-brand-600: #0284c7;
+  --color-brand-700: #0369a1;
+  --color-magenta-400: #a5b4fc;
+  --color-magenta-500: #6366f1;
+  --theme-glow-1: 14 165 233;
+  --theme-glow-2: 99 102 241;
+}
+
+:root[data-theme="sunset"] {
+  --color-ink-950: #0b0704;
+  --color-ink-900: #120b06;
+  --color-ink-850: #18100a;
+  --color-ink-800: #1f140c;
+  --color-ink-700: #27180f;
+  --color-ink-600: #321f14;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+  --color-magenta-400: #fda4af;
+  --color-magenta-500: #f43f5e;
+  --theme-glow-1: 249 115 22;
+  --theme-glow-2: 244 63 94;
+}
+
+:root[data-theme="candy"] {
+  --color-ink-950: #0b050c;
+  --color-ink-900: #130813;
+  --color-ink-850: #1a0b1a;
+  --color-ink-800: #210e21;
+  --color-ink-700: #2a122a;
+  --color-ink-600: #351735;
+  --color-brand-200: #fbcfe8;
+  --color-brand-300: #f9a8d4;
+  --color-brand-400: #f472b6;
+  --color-brand-500: #ec4899;
+  --color-brand-600: #db2777;
+  --color-brand-700: #be185d;
+  --color-magenta-400: #d8b4fe;
+  --color-magenta-500: #a855f7;
+  --theme-glow-1: 236 72 153;
+  --theme-glow-2: 168 85 247;
+}
+
+:root[data-theme="noir"] {
+  --color-ink-950: #0a0a0a;
+  --color-ink-900: #121212;
+  --color-ink-850: #181818;
+  --color-ink-800: #1f1f1f;
+  --color-ink-700: #272727;
+  --color-ink-600: #333333;
+  --color-brand-200: #e4e4e7;
+  --color-brand-300: #d4d4d8;
+  --color-brand-400: #a1a1aa;
+  --color-brand-500: #71717a;
+  --color-brand-600: #52525b;
+  --color-brand-700: #3f3f46;
+  --color-magenta-400: #a1a1aa;
+  --color-magenta-500: #71717a;
+  --theme-glow-1: 161 161 170;
+  --theme-glow-2: 113 113 122;
 }
