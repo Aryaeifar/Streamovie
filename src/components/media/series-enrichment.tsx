@@ -46,7 +46,7 @@ function EpisodeGuide({ title, year, imdbId, selectedSeason, downloads }: { titl
           {seasonQuery.isLoading && !episodeCount ? <div className="space-y-3 p-5 sm:p-6"><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div> : null}
           {!seasonQuery.isLoading && !episodeCount ? <p className="p-5 text-sm text-fog-400 sm:p-6">{seasonQuery.error ? t.details.episodesUnavailable : t.details.noOmdbEpisodes}</p> : null}
           {episodeCount ? (
-            <div className="space-y-3 p-4 sm:p-6">
+            <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3">
               {Array.from({ length: episodeCount }, (_, index) => {
                 const download = downloads[index];
                 const details = metadata.find((episode) => Number(episode.Episode) === index + 1) ?? metadata[index];
@@ -64,7 +64,7 @@ function EpisodeGuide({ title, year, imdbId, selectedSeason, downloads }: { titl
                         {details?.imdbRating && details.imdbRating !== "N/A" ? <span className="inline-flex items-center gap-1.5 text-gold-300"><Star className="size-3.5" fill="currentColor" />{details.imdbRating}</span> : null}
                       </div>
                     </div>
-                    {sources.length ? <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.06] pt-3">{sources.map((source) => <a key={`${source.id}-${source.url}`} href={source.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-2 rounded-xl border border-brand-400/20 bg-brand-500/[0.08] px-3 py-2 text-xs font-semibold text-brand-200 transition hover:border-brand-400/50 hover:bg-brand-500/[0.16]"><ArrowDownToLine className="size-3.5" />{source.quality}</a>)}</div> : <p className="mt-3 border-t border-white/[0.06] pt-3 text-xs text-fog-500">{t.details.noLinks}</p>}
+                    {sources.length ? <div className="mt-4 grid grid-cols-1 gap-2 border-t border-white/[0.06] pt-3 sm:grid-cols-2 lg:grid-cols-3">{sources.map((source) => <a key={`${source.id}-${source.url}`} href={source.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-between gap-2 rounded-xl border border-brand-400/20 bg-brand-500/[0.08] px-3 py-2 text-xs font-semibold text-brand-200 transition hover:border-brand-400/50 hover:bg-brand-500/[0.16]"><span className="flex min-w-0 items-center gap-2"><ArrowDownToLine className="size-3.5 shrink-0" /><span className="truncate">{source.quality}</span></span></a>)}</div> : <p className="mt-3 border-t border-white/[0.06] pt-3 text-xs text-fog-500">{t.details.noLinks}</p>}
                   </article>
                 );
               })}
