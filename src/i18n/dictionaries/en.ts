@@ -123,6 +123,10 @@ const en = {
     rights: "All rights reserved.",
     disclaimer: "Media metadata is provided by a third-party catalog.",
     sections: "Browse",
+    topRated: "Top rated",
+    description:
+      "Discover endless movies and series — trending picks, the IMDb Top 250, and everything you save, all in one place.",
+    backToTop: "Back to top",
     about: "About",
   },
   common: {
