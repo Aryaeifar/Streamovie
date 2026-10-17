@@ -17,6 +17,8 @@ export default function HomePage() {
   const { t } = useI18n();
   const movies = useMovies();
   const series = useSeries();
+  const topMovies = useMovies(0, 0, "imdb");
+  const topSeries = useSeries(0, 0, "imdb");
 
   const featured = useMemo<HeroItem[]>(
     () => [
@@ -76,6 +78,24 @@ export default function HomePage() {
           loading={series.isLoading}
           error={series.error}
           onRetry={() => series.refetch()}
+        />
+        <MediaRow
+          id="imdb-movies"
+          title={t.home.imdbMovies}
+          subtitle={t.home.imdbMoviesSubtitle}
+          items={toRows(topMovies.data, "movie")}
+          loading={topMovies.isLoading}
+          error={topMovies.error}
+          onRetry={() => topMovies.refetch()}
+        />
+        <MediaRow
+          id="imdb-series"
+          title={t.home.imdbSeries}
+          subtitle={t.home.imdbSeriesSubtitle}
+          items={toRows(topSeries.data, "series")}
+          loading={topSeries.isLoading}
+          error={topSeries.error}
+          onRetry={() => topSeries.refetch()}
         />
       </Container>
     </AppShell>
