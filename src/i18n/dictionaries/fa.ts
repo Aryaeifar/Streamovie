@@ -13,6 +13,9 @@ const fa: Dictionary = {
     bookmarks: "نشان‌شده‌ها",
     skipToContent: "پرش به محتوا",
     menu: "منو",
+    library: "کتابخانه",
+    collapseSidebar: "جمع‌کردن نوار کناری",
+    expandSidebar: "بازکردن نوار کناری",
   },
   search: {
     placeholder: "جستجوی فیلم و سریال",

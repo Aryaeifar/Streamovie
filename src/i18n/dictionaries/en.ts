@@ -11,6 +11,9 @@ const en = {
     bookmarks: "Bookmarks",
     skipToContent: "Skip to content",
     menu: "Menu",
+    library: "Library",
+    collapseSidebar: "Collapse sidebar",
+    expandSidebar: "Expand sidebar",
   },
   search: {
     placeholder: "Search movies & series",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Check, Settings, X } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
 import type { Locale } from "@/i18n/config";
@@ -20,17 +20,22 @@ export function SettingsLauncher() {
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
 
-  const [open, setOpen] = useState(false);
+  const open = useUIStore((state) => state.settingsOpen);
+  const setSettingsOpen = useUIStore((state) => state.setSettingsOpen);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   const close = useCallback(() => {
-    setOpen(false);
-    triggerRef.current?.focus();
-  }, []);
+    setSettingsOpen(false);
+    const opener = openerRef.current;
+    if (opener && opener.isConnected) opener.focus();
+    else triggerRef.current?.focus();
+  }, [setSettingsOpen]);
 
   useEffect(() => {
     if (!open) return;
+    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const panel = panelRef.current;
     const focusables = () =>
       panel
@@ -81,11 +86,11 @@ export function SettingsLauncher() {
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => setSettingsOpen(true)}
         aria-label={t.settings.open}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="fixed end-0 top-1/2 z-40 flex -translate-y-1/2 items-center justify-center rounded-s-2xl border border-e-0 border-white/10 bg-ink-850/90 px-2.5 py-3 text-fog-300 shadow-[var(--shadow-lift)] backdrop-blur-xl transition hover:bg-ink-800 hover:text-white"
+        className="fixed end-0 top-1/2 z-40 flex -translate-y-1/2 items-center justify-center rounded-s-2xl border border-e-0 border-white/10 bg-ink-850/90 px-2.5 py-3 text-fog-300 shadow-[var(--shadow-lift)] backdrop-blur-xl transition hover:bg-ink-800 hover:text-white lg:hidden"
       >
         <Settings className="size-5" />
       </button>
