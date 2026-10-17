@@ -9,6 +9,7 @@ export type BrowseCategory = {
   slug: string;
   kind: BrowseKind;
   sort: BrowseSort;
+  genreId?: number;
   titleKey: HomeKey;
   subtitleKey: HomeKey;
 };
@@ -17,8 +18,8 @@ export const browseCategories: BrowseCategory[] = [
   { slug: "trending", kind: "all", sort: "created", titleKey: "trending", subtitleKey: "trendingSubtitle" },
   { slug: "movies", kind: "movie", sort: "created", titleKey: "movies", subtitleKey: "moviesSubtitle" },
   { slug: "series", kind: "series", sort: "created", titleKey: "seriesRow", subtitleKey: "seriesSubtitle" },
-  { slug: "imdb-movies", kind: "movie", sort: "imdb", titleKey: "imdbMovies", subtitleKey: "imdbMoviesSubtitle" },
-  { slug: "imdb-series", kind: "series", sort: "imdb", titleKey: "imdbSeries", subtitleKey: "imdbSeriesSubtitle" },
+  { slug: "imdb-movies", kind: "movie", sort: "imdb", genreId: 32, titleKey: "imdbMovies", subtitleKey: "imdbMoviesSubtitle" },
+  { slug: "imdb-series", kind: "series", sort: "imdb", genreId: 32, titleKey: "imdbSeries", subtitleKey: "imdbSeriesSubtitle" },
 ];
 
 export function getBrowseCategory(slug: string): BrowseCategory | undefined {

@@ -25,9 +25,10 @@ type MediaRowProps = {
   error?: Error | null;
   onRetry?: () => void;
   moreHref?: string;
+  cardStyle?: "netflix";
 };
 
-export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, moreHref }: MediaRowProps) {
+export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, moreHref, cardStyle }: MediaRowProps) {
   const { t } = useI18n();
   const scroller = useRef<HTMLDivElement>(null);
   const setSelectedMedia = useSelectedMediaStore((state) => state.setSelectedMedia);
@@ -92,9 +93,11 @@ export function MediaRow({ id, title, subtitle, items, loading, error, onRetry, 
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
-              className="w-[42vw] max-w-[184px] shrink-0 snap-start min-[390px]:w-[44vw] sm:w-52 sm:max-w-none md:w-56 lg:w-60"
+              className={cardStyle === "netflix"
+                ? "w-[48vw] max-w-[210px] shrink-0 snap-start min-[390px]:w-[50vw] sm:w-[36vw] sm:max-w-[270px] md:w-[26vw] lg:w-[20vw] lg:max-w-[290px]"
+                : "w-[42vw] max-w-[184px] shrink-0 snap-start min-[390px]:w-[44vw] sm:w-52 sm:max-w-none md:w-56 lg:w-60"}
             >
-              <MediaCard media={media} kind={kind} onSelect={() => setSelectedMedia(kind, media)} />
+              <MediaCard media={media} kind={kind} landing={cardStyle === "netflix"} onSelect={() => setSelectedMedia(kind, media)} />
             </motion.div>
           ))}
         </div>

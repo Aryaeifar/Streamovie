@@ -15,11 +15,12 @@ type MediaCardProps = {
   media: APIMedia;
   kind: MediaKind;
   compact?: boolean;
+  landing?: boolean;
   onSelect?: () => void;
   className?: string;
 };
 
-export function MediaCard({ media, kind, compact = false, onSelect, className }: MediaCardProps) {
+export function MediaCard({ media, kind, compact = false, landing = false, onSelect, className }: MediaCardProps) {
   const { t } = useI18n();
   const title = getTitle(media);
   const poster = getPoster(media);
@@ -40,7 +41,10 @@ export function MediaCard({ media, kind, compact = false, onSelect, className }:
       className,
     )}>
       <Link href={href} onClick={onSelect} aria-label={title} className="flex flex-1 flex-col">
-        <div className={cn("relative overflow-hidden rounded-xl border border-white/[0.08] bg-ink-800 shadow-lg shadow-black/20", compact ? "aspect-[16/10]" : "aspect-[2/3]")}>
+        <div className={cn(
+          "relative overflow-hidden rounded-[1.5rem] bg-ink-800 shadow-lg shadow-black/20 sm:rounded-[1.75rem]",
+          landing ? "aspect-video" : compact ? "aspect-[16/10]" : "aspect-[2/3]",
+        )}>
           {poster ? (
             <Image
               src={poster}
@@ -54,10 +58,20 @@ export function MediaCard({ media, kind, compact = false, onSelect, className }:
             <div className="flex h-full w-full items-center justify-center text-fog-500"><ImageOff className="size-7" /></div>
           )}
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
-          {rating > 0 ? <span className="absolute start-2 bottom-2 inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/70 px-2 py-1 text-xs font-bold tabular-nums text-gold-300 backdrop-blur-sm"><Star className="size-3" fill="currentColor" />{rating.toFixed(1)}</span> : null}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/15" />
+          {rating > 0 ? <span className={cn("absolute start-2 inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/70 px-2 py-1 text-xs font-bold tabular-nums text-gold-300 backdrop-blur-sm", landing ? "top-2" : "bottom-2")}><Star className="size-3" fill="currentColor" />{rating.toFixed(1)}</span> : null}
 
-          <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/95 to-black/35 p-3 opacity-0 transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+          {landing ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 transition-opacity duration-200 group-hover:opacity-0 group-focus-within:opacity-0 sm:p-4">
+              <h3 lang={persian ? "fa" : "en"} dir={persian ? "rtl" : "ltr"} className="line-clamp-1 text-start text-sm font-extrabold text-white drop-shadow-lg sm:text-base">{title}</h3>
+              {year ? <span className="mt-1 block text-[11px] font-medium text-white/65 sm:text-xs">{year}</span> : null}
+            </div>
+          ) : null}
+
+          <div className={cn(
+            "pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/95 to-black/35 p-3 opacity-0 transition duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4",
+            landing && "bg-gradient-to-t from-black/95 via-black/65 to-black/10",
+          )}>
             <h3 lang={persian ? "fa" : "en"} dir={persian ? "rtl" : "ltr"} className="line-clamp-2 text-start text-sm font-bold leading-snug text-white sm:text-base">
               {title}
             </h3>
@@ -66,12 +80,12 @@ export function MediaCard({ media, kind, compact = false, onSelect, className }:
           </div>
         </div>
 
-        <div className={cn("flex flex-1 flex-col", compact ? "gap-0.5 px-1.5 py-2" : "gap-1 px-1.5 py-2.5")}>
+        {!landing ? <div className={cn("flex flex-1 flex-col", compact ? "gap-0.5 px-1.5 py-2" : "gap-1 px-1.5 py-2.5")}>
           <h3 lang={persian ? "fa" : "en"} dir={persian ? "rtl" : "ltr"} className={cn("line-clamp-2 font-semibold leading-snug text-fog-100 transition group-hover:text-white", compact ? "text-xs" : "min-h-10 text-sm")}>
             {title}
           </h3>
           {year ? <span className="mt-auto text-xs tabular-nums text-fog-500">{year}</span> : null}
-        </div>
+        </div> : null}
       </Link>
 
       <button

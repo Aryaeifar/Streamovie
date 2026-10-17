@@ -21,7 +21,7 @@ export function SiteHeader() {
 
   useEffect(() => {
     if (!isHome) return;
-    const sectionIds = ["featured", "trending", "movies", "series", "imdb-movies", "imdb-series"];
+    const sectionIds = ["featured", "movies", "series", "imdb-movies", "imdb-series"];
     const sections = sectionIds.map((id) => document.getElementById(id)).filter((section): section is HTMLElement => Boolean(section));
     if (!sections.length) return;
 
@@ -42,7 +42,6 @@ export function SiteHeader() {
   if (isHome) {
     const tabs = [
       ["featured", t.home.featured],
-      ["trending", t.home.trending],
       ["movies", t.home.movies],
       ["series", t.home.seriesRow],
       ["imdb-movies", t.home.imdbMovies],

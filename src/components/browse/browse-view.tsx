@@ -18,6 +18,7 @@ import { useInfiniteMedia, type BrowseItem } from "@/hooks/use-infinite-media";
 import { useMediaSearch } from "@/hooks/use-media-search";
 import type { BrowseCategory, BrowseKind, BrowseSort } from "@/lib/browse-categories";
 import { getMediaKind } from "@/lib/media";
+import { getImdbTop250Rank, isInImdbTop250 } from "@/lib/imdb-top250";
 import { cn } from "@/lib/utils";
 import { useSelectedMediaStore } from "@/stores/use-selected-media-store";
 
@@ -37,19 +38,25 @@ export function BrowseView({ category }: { category: BrowseCategory }) {
   const debounced = useDebouncedValue(query, 350);
   const searching = debounced.trim().length > 0;
 
-  const list = useInfiniteMedia(kind, sort, genreId);
+  const list = useInfiniteMedia(kind, sort, category.genreId ?? genreId);
   const search = useMediaSearch(debounced);
   const genres = useGenres();
   const setSelectedMedia = useSelectedMediaStore((state) => state.setSelectedMedia);
 
   const items = useMemo<BrowseItem[]>(() => {
-    if (searching) {
-      return (search.data ?? [])
+    const result = searching
+      ? (search.data ?? [])
         .map((media) => ({ media, kind: getMediaKind(media) }))
-        .filter((item) => kind === "all" || item.kind === kind);
-    }
-    return list.data?.pages.flatMap((page) => page.items) ?? [];
-  }, [searching, search.data, list.data, kind]);
+        .filter((item) => (kind === "all" || item.kind === kind)
+          && (!category.genreId || isInImdbTop250(item.media, item.kind))
+          && (!genreId || (Array.isArray(item.media.genres) && item.media.genres.some((genre) => Number((genre as { id?: unknown }).id) === genreId))))
+      : (list.data?.pages.flatMap((page) => page.items) ?? [])
+      .filter((item) => (!category.genreId || isInImdbTop250(item.media, item.kind))
+        && (!category.genreId || !genreId || (Array.isArray(item.media.genres) && item.media.genres.some((genre) => Number((genre as { id?: unknown }).id) === genreId))));
+    return category.genreId
+      ? result.sort((first, second) => getImdbTop250Rank(first.media, first.kind) - getImdbTop250Rank(second.media, second.kind))
+      : result;
+  }, [searching, search.data, list.data, kind, category.genreId, genreId]);
 
   const title = t.home[category.titleKey];
   const subtitle = t.home[category.subtitleKey];

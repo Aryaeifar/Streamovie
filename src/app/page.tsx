@@ -12,6 +12,7 @@ import { useMovies } from "@/hooks/use-movies";
 import { useSeries } from "@/hooks/use-series";
 import { useMediaSearch } from "@/hooks/use-media-search";
 import type { APIMedia } from "@/lib/api/types";
+import { getImdbTop250Rank, isInImdbTop250 } from "@/lib/imdb-top250";
 import { Film } from "lucide-react";
 
 const HERO_BACKDROPS: Record<string, string> = {
@@ -54,22 +55,14 @@ export default function HomePage() {
   const { t } = useI18n();
   const movies = useMovies();
   const series = useSeries();
-  const topMovies = useMovies(0, 0, "imdb");
-  const topSeries = useSeries(0, 0, "imdb");
+  const topMovies = useMovies(0, 32, "imdb");
+  const topSeries = useSeries(0, 32, "imdb");
   const friendsSearch = useMediaSearch("Friends");
   const attackSearch = useMediaSearch("Attack on Titan");
   const berserkSearch = useMediaSearch("Berserk");
   const darkSearch = useMediaSearch("Dark");
   const breakingBadSearch = useMediaSearch("Breaking Bad");
   const gameOfThronesSearch = useMediaSearch("Game of Thrones");
-
-  const featured = useMemo<HeroItem[]>(
-    () => [
-      ...(movies.data ?? []).slice(0, 6).map((media) => ({ media, kind: "movie" as const })),
-      ...(series.data ?? []).slice(0, 4).map((media) => ({ media, kind: "series" as const })),
-    ],
-    [movies.data, series.data],
-  );
 
   const toRows = (data: APIMedia[] | undefined, kind: "movie" | "series") =>
     data?.map((media) => ({ media, kind }));
@@ -114,8 +107,13 @@ export default function HomePage() {
     gameOfThronesSearch,
   ].some((query) => query.isLoading);
 
-  const loading = movies.isLoading || series.isLoading;
   const error = movies.error ?? series.error;
+  const rankedTopMovies = (topMovies.data ?? [])
+    .filter((media) => isInImdbTop250(media, "movie"))
+    .sort((first, second) => getImdbTop250Rank(first, "movie") - getImdbTop250Rank(second, "movie"));
+  const rankedTopSeries = (topSeries.data ?? [])
+    .filter((media) => isInImdbTop250(media, "series"))
+    .sort((first, second) => getImdbTop250Rank(first, "series") - getImdbTop250Rank(second, "series"));
 
   return (
     <AppShell>
@@ -135,19 +133,6 @@ export default function HomePage() {
 
       <Container className="space-y-8 px-4 pb-10 pt-5 sm:space-y-10 sm:px-6 sm:pt-8 lg:px-10">
         <MediaRow
-          id="trending"
-          title={t.home.trending}
-          subtitle={t.home.trendingSubtitle}
-          items={featured.length ? featured : undefined}
-          loading={loading}
-          error={error}
-          onRetry={() => {
-            movies.refetch();
-            series.refetch();
-          }}
-          moreHref="/browse/trending"
-        />
-        <MediaRow
           id="movies"
           title={t.home.movies}
           subtitle={t.home.moviesSubtitle}
@@ -156,6 +141,7 @@ export default function HomePage() {
           error={movies.error}
           onRetry={() => movies.refetch()}
           moreHref="/browse/movies"
+          cardStyle="netflix"
         />
         <MediaRow
           id="series"
@@ -171,7 +157,7 @@ export default function HomePage() {
           id="imdb-movies"
           title={t.home.imdbMovies}
           subtitle={t.home.imdbMoviesSubtitle}
-          items={toRows(topMovies.data, "movie")}
+          items={toRows(rankedTopMovies, "movie")}
           loading={topMovies.isLoading}
           error={topMovies.error}
           onRetry={() => topMovies.refetch()}
@@ -181,7 +167,7 @@ export default function HomePage() {
           id="imdb-series"
           title={t.home.imdbSeries}
           subtitle={t.home.imdbSeriesSubtitle}
-          items={toRows(topSeries.data, "series")}
+          items={toRows(rankedTopSeries, "series")}
           loading={topSeries.isLoading}
           error={topSeries.error}
           onRetry={() => topSeries.refetch()}

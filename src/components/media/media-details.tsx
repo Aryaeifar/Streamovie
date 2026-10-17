@@ -234,7 +234,7 @@ export function MediaDetails({ kind, mediaId }: { kind: MediaKind; mediaId: numb
 
           <div className="grid gap-8 p-6 sm:p-10 lg:grid-cols-[minmax(200px,260px)_minmax(0,1fr)] lg:gap-12 lg:p-12">
             <div className="order-2 mx-auto w-full max-w-[240px] lg:order-1 lg:mx-0 lg:max-w-none">
-              <div className="relative aspect-[2/3] overflow-hidden rounded-card border border-white/15 bg-ink-800 shadow-[var(--shadow-lift)]">
+              <div className="relative aspect-[2/3] overflow-hidden rounded-[1.75rem] bg-ink-800 shadow-[var(--shadow-lift)] sm:rounded-[2rem]">
                 {poster ? (
                   <Image src={poster} alt={title} fill priority unoptimized sizes="260px" className="object-cover" />
                 ) : (
