@@ -49,6 +49,35 @@ export function getCover(media: APIMedia): string | undefined {
   );
 }
 
+/** Prefer wide, high-resolution artwork for full-bleed hero areas. */
+export function getHeroImage(media: APIMedia): string | undefined {
+  const record = media as Record<string, unknown>;
+  const wideArt = firstString(
+    record.backdrop_url,
+    record.backdrop,
+    record.backdrop_image,
+    record.backdropImage,
+    record.banner,
+    record.wallpaper,
+    record.fanart,
+    record.background_image,
+    record.background,
+    record.landscape_url,
+    record.landscape,
+    record.cover,
+  );
+
+  const image = wideArt ?? getCover(media) ?? getPoster(media);
+  if (!image) return undefined;
+
+  // TMDB's `original` variant keeps the source aspect ratio while avoiding
+  // the smaller poster-sized rendition often included in catalog responses.
+  return image.replace(
+    /(https?:\/\/image\.tmdb\.org\/t\/p\/)(?:w\d+|original)(\/)/i,
+    "$1original$2",
+  );
+}
+
 export function getYear(media: APIMedia): string | undefined {
   const value = firstString(media.year, media.release_year, media.release_date);
   return value;

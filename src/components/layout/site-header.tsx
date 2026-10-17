@@ -51,7 +51,7 @@ export function SiteHeader() {
 
     return (
       <header
-        className="pointer-events-none fixed inset-x-0 top-0 z-40 h-[64px] w-full px-2 sm:px-4 lg:px-6"
+        className="pointer-events-none fixed inset-x-0 top-3 z-40 h-[64px] w-full px-2 sm:px-4 lg:px-6"
       >
         <LayoutGroup id="landing-section-tabs">
           <nav

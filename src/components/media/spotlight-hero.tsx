@@ -1,20 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { Bookmark, BookmarkCheck, Heart, Play, Plus } from "lucide-react";
+import { Bookmark, BookmarkCheck, Heart, Play, Plus, Star } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
 import { useLibraryHydrated } from "@/hooks/use-library-hydrated";
-import { getCover, getGenres, getPoster, getTitle, getYear, parseDescription, type MediaKind } from "@/lib/media";
+import { getCover, getGenres, getHeroImage, getPoster, getTitle, getYear, parseDescription, type MediaKind } from "@/lib/media";
 import { isPersianText } from "@/lib/text";
 import type { APIMedia } from "@/lib/api/types";
 import { useLibraryStore } from "@/stores/use-library-store";
 import { useSelectedMediaStore } from "@/stores/use-selected-media-store";
 import { cn } from "@/lib/utils";
 
-export type HeroItem = { media: APIMedia; kind: MediaKind };
+export type HeroItem = {
+  media: APIMedia;
+  kind: MediaKind;
+  artwork?: string;
+  titleFa?: string;
+  descriptionFa?: string;
+};
 
 const roundAction =
   "inline-flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white backdrop-blur-md transition hover:border-white/50 hover:bg-white/15";
@@ -22,6 +28,7 @@ const roundAction =
 export function SpotlightHero({ items }: { items: HeroItem[] }) {
   const { t, isRtl } = useI18n();
   const [index, setIndex] = useState(0);
+  const [failedArtwork, setFailedArtwork] = useState<Record<string, boolean>>({});
   const hydrated = useLibraryHydrated();
   const setSelectedMedia = useSelectedMediaStore((state) => state.setSelectedMedia);
   const watchlist = useLibraryStore((state) => state.watchlist);
@@ -30,17 +37,53 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
   const likes = useLibraryStore((state) => state.likes);
   const toggleLike = useLibraryStore((state) => state.toggleLike);
 
-  const spotlight = items.slice(0, 5);
+  const spotlight = items.slice(0, 6);
+  useEffect(() => {
+    if (spotlight.length < 2) return;
+    const timer = window.setInterval(() => {
+      setIndex((current) => (current + 1) % spotlight.length);
+    }, 10_000);
+    return () => window.clearInterval(timer);
+  }, [spotlight.length, index]);
+
+  const safeIndex = Math.max(0, Math.min(index, spotlight.length - 1));
+  useEffect(() => {
+    if (spotlight.length < 2) return;
+    const upcoming = spotlight[(safeIndex + 1) % spotlight.length];
+    if (!upcoming) return;
+    const source = upcoming.artwork && !failedArtwork[upcoming.artwork]
+      ? upcoming.artwork
+      : getHeroImage(upcoming.media);
+    if (!source) return;
+
+    const preloadedImage = new window.Image();
+    preloadedImage.decoding = "async";
+    preloadedImage.fetchPriority = "low";
+    preloadedImage.onerror = () => {
+      if (upcoming.artwork) {
+        setFailedArtwork((previous) => previous[upcoming.artwork!] ? previous : ({ ...previous, [upcoming.artwork!]: true }));
+      }
+    };
+    preloadedImage.src = source;
+
+    return () => {
+      preloadedImage.onload = null;
+      preloadedImage.onerror = null;
+    };
+  }, [failedArtwork, index, items, safeIndex, spotlight.length]);
+
   if (!spotlight.length) return null;
 
-  const safeIndex = Math.min(index, spotlight.length - 1);
-  const { media, kind } = spotlight[safeIndex];
+  const item = spotlight[safeIndex];
+  const { media, kind } = item;
 
-  const title = getTitle(media);
-  const backdrop = getCover(media) ?? getPoster(media);
+  const title = isRtl && item.titleFa ? item.titleFa : getTitle(media);
+  const backdrop = item.artwork && !failedArtwork[item.artwork] ? item.artwork : getHeroImage(media);
   const year = getYear(media);
   const genres = getGenres(media).slice(0, 3);
-  const overview = parseDescription(media.description).overview;
+  const overview = isRtl && item.descriptionFa ? item.descriptionFa : parseDescription(media.description ?? media.summary).overview;
+  const imdbRatingValue = Number(media.imdb ?? media.imdb_rating ?? media.imdbRating);
+  const imdbRating = Number.isFinite(imdbRatingValue) ? imdbRatingValue : 0;
   const href = `/${kind === "movie" ? "movies" : "series"}/${media.id}`;
   const saved = hydrated && watchlist.includes(media.id);
   const liked = hydrated && likes.includes(media.id);
@@ -57,7 +100,20 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
           className="absolute inset-0 -z-20"
         >
           {backdrop ? (
-            <Image src={backdrop} alt="" fill priority unoptimized sizes="100vw" className="object-cover object-center" />
+            <Image
+              src={backdrop}
+              alt={`${title} featured artwork`}
+              fill
+              priority
+              unoptimized
+              sizes="100vw"
+              onError={() => {
+                if (item.artwork) {
+                  setFailedArtwork((previous) => previous[item.artwork!] ? previous : ({ ...previous, [item.artwork!]: true }));
+                }
+              }}
+              className="object-cover object-center"
+            />
           ) : null}
         </motion.div>
       </AnimatePresence>
@@ -91,8 +147,16 @@ export function SpotlightHero({ items }: { items: HeroItem[] }) {
                 {t.home.featured}
               </div>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-fog-200 sm:text-base">
+                {imdbRating > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 text-gold-300">
+                    <Star className="size-4" fill="currentColor" />
+                    <span className="font-bold tabular-nums">{imdbRating.toFixed(1)}</span>
+                    <span className="text-xs font-semibold text-fog-300">IMDb</span>
+                  </span>
+                ) : null}
+                {imdbRating > 0 && year ? <span className="text-fog-600">•</span> : null}
                 {year ? <span className="tabular-nums">{year}</span> : null}
-                {year && genres.length ? <span className="text-fog-600">•</span> : null}
+                {(year || imdbRating > 0) && genres.length ? <span className="text-fog-600">•</span> : null}
                 {genres.length ? <span>{genres.join(", ")}</span> : null}
               </div>
 
