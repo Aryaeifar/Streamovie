@@ -1,5 +1,6 @@
 import { apiKey, requestWithFallback, requireApiKey } from "@/lib/api/client";
 import type { APICountry, APIGenre, APISeason, APIMedia, MediaSort, SearchResponse } from "@/lib/api/types";
+import { excludeHiddenMedia } from "@/lib/media-exclusions";
 
 function key() {
   return encodeURIComponent(requireApiKey());
@@ -7,11 +8,11 @@ function key() {
 
 export const mediaApi = {
   fetchMovies(page = 0, genreId = 0, sort: MediaSort = "created") {
-    return requestWithFallback<APIMedia[]>(`/api/movie/by/filtres/${genreId}/${encodeURIComponent(sort)}/${page}/${key()}`);
+    return requestWithFallback<APIMedia[]>(`/api/movie/by/filtres/${genreId}/${encodeURIComponent(sort)}/${page}/${key()}`).then(excludeHiddenMedia);
   },
 
   fetchSeries(page = 0, genreId = 0, sort: MediaSort = "created") {
-    return requestWithFallback<APIMedia[]>(`/api/serie/by/filtres/${genreId}/${encodeURIComponent(sort)}/${page}/${key()}`);
+    return requestWithFallback<APIMedia[]>(`/api/serie/by/filtres/${genreId}/${encodeURIComponent(sort)}/${page}/${key()}`).then(excludeHiddenMedia);
   },
 
   fetchCountries() {
@@ -19,11 +20,11 @@ export const mediaApi = {
   },
 
   fetchMediaByCountry(countryId: number, page = 0, sort: MediaSort = "created") {
-    return requestWithFallback<APIMedia[]>(`/api/poster/by/filtres/0/${countryId}/${encodeURIComponent(sort)}/${page}/${key()}`);
+    return requestWithFallback<APIMedia[]>(`/api/poster/by/filtres/0/${countryId}/${encodeURIComponent(sort)}/${page}/${key()}`).then(excludeHiddenMedia);
   },
 
   search(query: string) {
-    return requestWithFallback<SearchResponse>(`/api/search/${encodeURIComponent(query)}/${key()}/`).then((result) => result.posters);
+    return requestWithFallback<SearchResponse>(`/api/search/${encodeURIComponent(query)}/${key()}/`).then((result) => excludeHiddenMedia(result.posters));
   },
 
   fetchSeasons(seriesId: number) {

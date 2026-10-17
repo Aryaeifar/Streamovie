@@ -35,11 +35,13 @@ export function CountriesView() {
           <p className="max-w-xl text-sm text-fog-400">{t.countries.subtitle}</p>
         </header>
 
-        <div className="relative max-w-xl">
-          <Search className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-fog-500" />
+        <div className="sticky top-[72px] z-30 -mx-4 px-2 py-2 sm:top-[72px] sm:mx-0 sm:px-0 sm:py-3">
+          <div className="relative mx-auto max-w-5xl rounded-full border border-white/[0.09] bg-black/45 p-1.5 shadow-xl backdrop-blur-xl">
+          <Search className="pointer-events-none absolute start-5 top-1/2 size-4 -translate-y-1/2 text-white/55" />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.countries.search}
             aria-label={t.countries.search}
-            className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.05] ps-11 pe-4 text-sm text-fog-100 outline-none transition placeholder:text-fog-500 focus:border-brand-400/60" />
+            className="h-10 w-full rounded-full border border-white/[0.08] bg-black/25 ps-11 pe-4 text-sm text-fog-100 outline-none transition placeholder:text-white/40 hover:border-white/20 hover:bg-white/[0.05] focus:border-white/25 focus:bg-white/[0.06] focus:ring-4 focus:ring-white/[0.05] sm:h-11" />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
