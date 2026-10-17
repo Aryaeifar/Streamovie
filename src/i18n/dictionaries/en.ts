@@ -36,6 +36,9 @@ const en = {
     previous: "Previous",
     next: "Next",
     close: "Close",
+    like: "Like",
+    unlike: "Unlike",
+    watchNow: "Watch now",
     seeMore: "See more",
   },
   home: {

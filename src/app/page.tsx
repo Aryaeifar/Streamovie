@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { MediaHero, type HeroItem } from "@/components/media/media-hero";
+import { SpotlightHero, type HeroItem } from "@/components/media/spotlight-hero";
 import { MediaRow } from "@/components/media/media-row";
 import { Container } from "@/components/ui/container";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -36,19 +36,21 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      <Container className="space-y-12 py-6 sm:py-8">
-        {featured.length ? (
-          <MediaHero items={featured} />
-        ) : loading ? (
-          <Skeleton className="min-h-[64vh] rounded-hero sm:min-h-[70vh]" />
-        ) : (
+      {featured.length ? (
+        <SpotlightHero items={featured} />
+      ) : loading ? (
+        <Skeleton className="min-h-[70svh] w-full" />
+      ) : (
+        <Container className="py-10">
           <EmptyState
             icon={Film}
             title={t.home.unavailableTitle}
             description={error?.message ?? t.home.unavailableBody}
           />
-        )}
+        </Container>
+      )}
 
+      <Container className="space-y-12 pb-10 pt-12">
         <MediaRow
           id="trending"
           title={t.home.trending}

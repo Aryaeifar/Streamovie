@@ -38,6 +38,9 @@ const fa: Dictionary = {
     previous: "قبلی",
     next: "بعدی",
     close: "بستن",
+    like: "پسندیدن",
+    unlike: "لغو پسند",
+    watchNow: "تماشا کنید",
     seeMore: "مشاهده بیشتر",
   },
   home: {
