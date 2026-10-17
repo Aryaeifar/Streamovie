@@ -10,6 +10,7 @@ const fa: Dictionary = {
     movies: "فیلم‌ها",
     series: "سریال‌ها",
     trending: "پرطرفدار",
+    countries: "کشورها",
     bookmarks: "نشان‌شده‌ها",
     skipToContent: "پرش به محتوا",
     menu: "منو",
@@ -117,6 +118,15 @@ const fa: Dictionary = {
     empty: "هیچ عنوانی با فیلترهای شما مطابقت ندارد.",
     emptyHint: "عبارت جستجو یا فیلتر دیگری را امتحان کنید.",
     loadError: "بارگذاری عنوان‌ها ممکن نشد",
+  },
+  countries: {
+    title: "مرور بر اساس کشور",
+    subtitle: "فیلم‌ها و سریال‌های سراسر جهان را ببینید.",
+    search: "جستجوی کشورها",
+    all: "همه عنوان‌ها",
+    empty: "عنوانی برای این کشور پیدا نشد.",
+    loading: "در حال بارگذاری عنوان‌ها…",
+    country: "کشور",
   },
   bookmarks: {
     title: "نشان‌شده‌ها",

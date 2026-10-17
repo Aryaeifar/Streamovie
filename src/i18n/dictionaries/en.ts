@@ -8,6 +8,7 @@ const en = {
     movies: "Movies",
     series: "Series",
     trending: "Trending",
+    countries: "Countries",
     bookmarks: "Bookmarks",
     skipToContent: "Skip to content",
     menu: "Menu",
@@ -115,6 +116,15 @@ const en = {
     empty: "No titles match your filters.",
     emptyHint: "Try another search term or filter.",
     loadError: "Could not load titles",
+  },
+  countries: {
+    title: "Browse by country",
+    subtitle: "Explore movies and series from around the world.",
+    search: "Search countries",
+    all: "All titles",
+    empty: "No titles found for this country.",
+    loading: "Loading titles…",
+    country: "Country",
   },
   bookmarks: {
     title: "Bookmarks",

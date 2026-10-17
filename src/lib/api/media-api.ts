@@ -1,5 +1,5 @@
 import { apiKey, requestWithFallback, requireApiKey } from "@/lib/api/client";
-import type { APIGenre, APISeason, APIMedia, MediaSort, SearchResponse } from "@/lib/api/types";
+import type { APICountry, APIGenre, APISeason, APIMedia, MediaSort, SearchResponse } from "@/lib/api/types";
 
 function key() {
   return encodeURIComponent(requireApiKey());
@@ -12,6 +12,14 @@ export const mediaApi = {
 
   fetchSeries(page = 0, genreId = 0, sort: MediaSort = "created") {
     return requestWithFallback<APIMedia[]>(`/api/serie/by/filtres/${genreId}/${encodeURIComponent(sort)}/${page}/${key()}`);
+  },
+
+  fetchCountries() {
+    return requestWithFallback<APICountry[]>(`/api/country/all/${key()}/`);
+  },
+
+  fetchMediaByCountry(countryId: number, page = 0, sort: MediaSort = "created") {
+    return requestWithFallback<APIMedia[]>(`/api/poster/by/filtres/0/${countryId}/${encodeURIComponent(sort)}/${page}/${key()}`);
   },
 
   search(query: string) {

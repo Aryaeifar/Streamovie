@@ -26,6 +26,12 @@ export interface APIGenre {
   [key: string]: unknown;
 }
 
+export interface APICountry {
+  id: number;
+  title: string;
+  image: string;
+}
+
 export interface SearchResponse {
   posters: APIMedia[];
 }

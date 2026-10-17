@@ -1,4 +1,4 @@
-import { Bookmark, Film, Home, Star, TrendingUp, Tv, type LucideIcon } from "lucide-react";
+import { Bookmark, Film, Home, Map, Star, TrendingUp, Tv, type LucideIcon } from "lucide-react";
 import type { Dictionary } from "@/i18n";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -14,6 +14,7 @@ export function sidebarNav(t: Dictionary): NavSection[] {
         { href: "/browse/movies", label: t.nav.movies, icon: Film },
         { href: "/browse/series", label: t.nav.series, icon: Tv },
         { href: "/browse/trending", label: t.nav.trending, icon: TrendingUp },
+        { href: "/countries", label: t.nav.countries, icon: Map },
       ],
     },
     {
