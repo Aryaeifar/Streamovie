@@ -94,7 +94,7 @@ const en = {
     availableLinks: "Available links",
     noLinks: "No download links available",
     noLinksHint: "Quality links will appear here when the catalog provides them.",
-    playerError: "This video link could not be played in this browser. Try the download link instead.",
+    playerError: "This source could not be played in the in-app player. Try its download link instead.",
     sourceQuality: "Quality",
     sourceType: "Format",
     episodeGuide: "Episode guide",

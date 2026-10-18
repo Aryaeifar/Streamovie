@@ -121,7 +121,7 @@ function SourceLinks({ sources, emptyTitle, emptyBody, onWatch }: { sources: Sou
             </span>
           </span>
           <span className="flex shrink-0 items-center gap-2">
-            {isPlayableVideoSource(source) ? <Button size="sm" onClick={() => onWatch(source)}><Play className="size-4" fill="currentColor" />{t.actions.watchOnline}</Button> : null}
+            <Button size="sm" onClick={() => onWatch(source)}><Play className="size-4" fill="currentColor" />{t.actions.watchOnline}</Button>
             <a href={source.url} target="_blank" rel="noreferrer" aria-label={`${t.actions.download}: ${source.quality}`} className="flex size-9 items-center justify-center rounded-lg bg-white/5 text-fog-200 transition hover:bg-brand-500 hover:text-white">
               <ArrowDownToLine className="size-4" />
             </a>
