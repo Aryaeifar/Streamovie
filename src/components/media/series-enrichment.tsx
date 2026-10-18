@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownToLine, Award, CalendarDays, ChevronDown, Clapperboard, Clock3, Globe2, Star, Tv } from "lucide-react";
+import { ArrowDownToLine, Award, CalendarDays, ChevronDown, Clapperboard, Clock3, Globe2, Play, Star, Tv } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n, format } from "@/hooks/use-i18n";
@@ -10,7 +10,7 @@ import { useSeriesEnrichment } from "@/hooks/use-series-enrichment";
 import type { APIMedia } from "@/lib/api/types";
 import type { OMDbEpisode } from "@/lib/api/omdb-api";
 import { fetchOMDbSeason } from "@/lib/api/omdb-api";
-import type { Episode } from "@/lib/media";
+import { isPlayableVideoSource, type Episode, type SourceLink } from "@/lib/media";
 
 function dateLabel(value?: string | null, locale = "en") {
   if (!value || value === "N/A") return "";
@@ -19,7 +19,7 @@ function dateLabel(value?: string | null, locale = "en") {
   return Number.isNaN(parsed.getTime()) ? value : new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(parsed);
 }
 
-function EpisodeGuide({ title, year, imdbId, selectedSeason, downloads }: { title: string; year?: string; imdbId?: string; selectedSeason: number; downloads: Episode[] }) {
+function EpisodeGuide({ title, year, imdbId, selectedSeason, downloads, onWatch }: { title: string; year?: string; imdbId?: string; selectedSeason: number; downloads: Episode[]; onWatch: (source: SourceLink, title: string) => void }) {
   const { t, locale } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const seasonQuery = useQuery({
@@ -52,19 +52,20 @@ function EpisodeGuide({ title, year, imdbId, selectedSeason, downloads }: { titl
                 const details = metadata.find((episode) => Number(episode.Episode) === index + 1) ?? metadata[index];
                 const episodeNumber = Number(details?.Episode) || index + 1;
                 const sources = download?.sources ?? [];
+                const episodeTitle = details?.Title ?? download?.title ?? `${t.details.episode} ${episodeNumber}`;
                 return (
                   <article key={details?.imdbID ?? download?.key ?? `${selectedSeason}-${episodeNumber}`} className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-[11px] font-bold uppercase tracking-wider text-brand-300">S{String(selectedSeason).padStart(2, "0")} · E{String(episodeNumber).padStart(2, "0")}</p>
-                        <h3 className="mt-1 text-base font-semibold text-fog-100">{details?.Title ?? download?.title ?? `${t.details.episode} ${episodeNumber}`}</h3>
+                        <h3 className="mt-1 text-base font-semibold text-fog-100">{episodeTitle}</h3>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-xs text-fog-400">
                         {details?.Released && details.Released !== "N/A" ? <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-3.5" />{dateLabel(details.Released, locale)}</span> : null}
                         {details?.imdbRating && details.imdbRating !== "N/A" ? <span className="inline-flex items-center gap-1.5 text-gold-300"><Star className="size-3.5" fill="currentColor" />{details.imdbRating}</span> : null}
                       </div>
                     </div>
-                    {sources.length ? <div className="mt-4 grid grid-cols-1 gap-2 border-t border-white/[0.06] pt-3 sm:grid-cols-2 lg:grid-cols-3">{sources.map((source) => <a key={`${source.id}-${source.url}`} href={source.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center justify-between gap-2 rounded-xl border border-brand-400/20 bg-brand-500/[0.08] px-3 py-2 text-xs font-semibold text-brand-200 transition hover:border-brand-400/50 hover:bg-brand-500/[0.16]"><span className="flex min-w-0 items-center gap-2"><ArrowDownToLine className="size-3.5 shrink-0" /><span className="truncate">{source.quality}</span></span></a>)}</div> : <p className="mt-3 border-t border-white/[0.06] pt-3 text-xs text-fog-500">{t.details.noLinks}</p>}
+                    {sources.length ? <div className="mt-4 grid grid-cols-1 gap-2 border-t border-white/[0.06] pt-3 sm:grid-cols-2 lg:grid-cols-3">{sources.map((source) => <div key={`${source.id}-${source.url}`} className="flex min-w-0 items-center gap-2">{isPlayableVideoSource(source) ? <button type="button" onClick={() => onWatch(source, `${title} · ${t.details.season} ${selectedSeason} · ${t.details.episode} ${episodeNumber}: ${episodeTitle}`)} className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-brand-500 px-3 text-xs font-bold text-white transition hover:brightness-110"><Play className="size-3.5" fill="currentColor" />{t.actions.watchOnline}</button> : null}<a href={source.url} target="_blank" rel="noreferrer noopener" className="inline-flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border border-brand-400/20 bg-brand-500/[0.08] px-3 py-2 text-xs font-semibold text-brand-200 transition hover:border-brand-400/50 hover:bg-brand-500/[0.16]"><span className="flex min-w-0 items-center gap-2"><ArrowDownToLine className="size-3.5 shrink-0" /><span className="truncate">{source.quality}</span></span></a></div>)}</div> : <p className="mt-3 border-t border-white/[0.06] pt-3 text-xs text-fog-500">{t.details.noLinks}</p>}
                   </article>
                 );
               })}
@@ -120,7 +121,7 @@ export function SeriesEnrichment({ media }: { media: APIMedia }) {
   );
 }
 
-export function SeriesEpisodeGuide({ media, episodes, selectedSeason }: { media: APIMedia; episodes: Episode[]; selectedSeason: number }) {
+export function SeriesEpisodeGuide({ media, episodes, selectedSeason, onWatch }: { media: APIMedia; episodes: Episode[]; selectedSeason: number; onWatch: (source: SourceLink, title: string) => void }) {
   const { omdb, title, year, imdbId } = useSeriesEnrichment(media);
-  return <EpisodeGuide title={title} year={year} imdbId={imdbId} selectedSeason={selectedSeason} downloads={episodes} />;
+  return <EpisodeGuide title={title} year={year} imdbId={imdbId} selectedSeason={selectedSeason} downloads={episodes} onWatch={onWatch} />;
 }

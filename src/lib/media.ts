@@ -10,6 +10,20 @@ export type SourceLink = {
   isTrailer: boolean;
 };
 
+/** Only advertise in-page playback for links that point to browser-playable video files. */
+export function isPlayableVideoSource(source: SourceLink): boolean {
+  if (source.isTrailer) return false;
+  let extension = "";
+  try {
+    extension = new URL(source.url).pathname.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase() ?? "";
+  } catch {
+    return false;
+  }
+
+  const format = `${source.type ?? ""} ${source.quality}`.toLowerCase();
+  return ["mp4", "webm", "ogg", "ogv"].includes(extension) || /\b(video\/)?(mp4|webm|ogg|ogv)\b/.test(format);
+}
+
 export type DescriptionBlock = { label: string; value: string };
 
 export type ParsedDescription = {

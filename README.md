@@ -60,6 +60,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `pnpm start` | Serve the production build. |
 | `pnpm lint` | Run ESLint. |
 
+## React Native Android app
+
+The React Native app is in `mobile/` and uses the maintained React Native TV distribution so one app can support Android phones and Android TV. It includes catalog browsing, search, saved titles, title details, seasons, episodes, and source links, with remote focus states and a TV launcher banner.
+
+Install the Java 17 JDK recommended by React Native, then open `mobile/android/` in Android Studio and let Gradle sync. From a terminal, run `pnpm install` in `mobile/`; use `pnpm android` to run on a connected phone or emulator. To create a standalone release APK, run `pnpm build:android` from `mobile/`. The APK is written to `mobile/android/app/build/outputs/apk/release/app-release.apk`. The mobile build reads `NEXT_PUBLIC_STREAMOVIE_API_KEY` from the project root `.env`; the key is embedded in the APK and should be treated as public. Keep server-only credentials such as `OMDB_API_KEY` out of mobile builds.
+
+On first launch, enter the catalog API key. The app keeps it in local app storage and sends it with catalog requests. Because the app calls the catalog API directly, the key can be extracted from a device by a determined user; use a server-side proxy for a production secret.
+
 ## Project layout
 
 ```text

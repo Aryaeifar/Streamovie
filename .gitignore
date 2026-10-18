@@ -1,5 +1,11 @@
 node_modules/
+.pnpm-store/
 .next/
+mobile/node_modules/
+mobile/src/env.generated.ts
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/**/build/
 out/
 dist/
 coverage/

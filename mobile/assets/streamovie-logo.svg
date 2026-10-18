@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="320" viewBox="0 0 1240 320">
+  <defs>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5966"/><stop offset="1" stop-color="#e50914"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(0 0) scale(.3125)">
+    <rect width="1024" height="1024" rx="232" fill="#0c0b10"/>
+    <path d="M731 275C635 192 501 174 458 181C330 186 242 257 242 358C242 434 299 477 422 509" fill="none" stroke="#f8f7fa" stroke-width="86" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M563 563c119 31 199 75 199 156 0 100-110 171-249 171-112 0-205-37-267-108" fill="none" stroke="url(#red)" stroke-width="86" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="m468 458 89 54-89 54z" fill="#ff5966"/>
+  </g>
+  <text x="365" y="205" fill="#f7f6fa" font-family="Inter, Arial, sans-serif" font-size="94" font-weight="800" letter-spacing="-2">STREAMOVIE</text>
+  <rect x="370" y="246" width="242" height="8" rx="4" fill="url(#red)"/>
+</svg>

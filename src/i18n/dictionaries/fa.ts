@@ -96,6 +96,7 @@ const fa: Dictionary = {
     availableLinks: "لینک‌های موجود",
     noLinks: "لینک دانلودی موجود نیست",
     noLinksHint: "لینک‌های کیفیت در صورت ارائه توسط فهرست اینجا نمایش داده می‌شوند.",
+    playerError: "این لینک ویدیو در این مرورگر پخش نشد. لطفاً لینک دانلود را امتحان کنید.",
     sourceQuality: "کیفیت",
     sourceType: "فرمت",
     episodeGuide: "راهنمای قسمت‌ها",

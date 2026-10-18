@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownToLine,
   Bookmark,
@@ -15,6 +15,7 @@ import {
   SignalHigh,
   Star,
   Tv,
+  X,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,7 @@ import {
   getSources,
   getTitle,
   getYear,
+  isPlayableVideoSource,
   parseDescription,
   type MediaKind,
   type SourceLink,
@@ -59,7 +61,43 @@ function RatingStars({ value }: { value: number }) {
   );
 }
 
-function SourceLinks({ sources, emptyTitle, emptyBody }: { sources: SourceLink[]; emptyTitle: string; emptyBody: string }) {
+function OnlineVideoPlayer({ source, title, onClose }: { source: SourceLink; title: string; onClose: () => void }) {
+  const { t } = useI18n();
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 backdrop-blur-sm sm:p-8" onClick={onClose}>
+      <div className="w-full max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-ink-950 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6">
+          <div className="min-w-0">
+            <p dir={isPersianText(title) ? "rtl" : "ltr"} className="truncate font-semibold text-fog-100">{title}</p>
+            <p className="mt-0.5 text-xs text-fog-500">{source.quality}</p>
+          </div>
+          <button type="button" autoFocus onClick={onClose} aria-label={t.actions.close} className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 text-fog-300 transition hover:bg-white/10 hover:text-white">
+            <X className="size-5" />
+          </button>
+        </div>
+        <video key={source.url} src={source.url} controls autoPlay playsInline preload="metadata" className="aspect-video max-h-[78vh] w-full bg-black" onError={() => setHasError(true)} />
+        {hasError ? <p role="status" className="px-4 py-3 text-sm text-rose-300 sm:px-6">{t.details.playerError}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+function SourceLinks({ sources, emptyTitle, emptyBody, onWatch }: { sources: SourceLink[]; emptyTitle: string; emptyBody: string; onWatch: (source: SourceLink) => void }) {
   const { t } = useI18n();
   const downloads = sources.filter((source) => !source.isTrailer);
 
@@ -72,13 +110,7 @@ function SourceLinks({ sources, emptyTitle, emptyBody }: { sources: SourceLink[]
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {downloads.map((source) => (
-        <a
-          key={`${source.id}-${source.url}`}
-          href={source.url}
-          target="_blank"
-          rel="noreferrer"
-          className="group flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-brand-400/50 hover:bg-white/[0.06]"
-        >
+        <div key={`${source.id}-${source.url}`} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-brand-400/50 hover:bg-white/[0.06]">
           <span className="min-w-0">
             <span className="flex items-center gap-2 font-semibold text-fog-100">
               <SignalHigh className="size-4 text-brand-400" />
@@ -88,16 +120,19 @@ function SourceLinks({ sources, emptyTitle, emptyBody }: { sources: SourceLink[]
               {source.type ? `${t.details.sourceType}: ${source.type}` : t.details.sourceQuality}
             </span>
           </span>
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-fog-200 transition group-hover:bg-brand-500 group-hover:text-white">
-            <ArrowDownToLine className="size-4" />
+          <span className="flex shrink-0 items-center gap-2">
+            {isPlayableVideoSource(source) ? <Button size="sm" onClick={() => onWatch(source)}><Play className="size-4" fill="currentColor" />{t.actions.watchOnline}</Button> : null}
+            <a href={source.url} target="_blank" rel="noreferrer" aria-label={`${t.actions.download}: ${source.quality}`} className="flex size-9 items-center justify-center rounded-lg bg-white/5 text-fog-200 transition hover:bg-brand-500 hover:text-white">
+              <ArrowDownToLine className="size-4" />
+            </a>
           </span>
-        </a>
+        </div>
       ))}
     </div>
   );
 }
 
-function DownloadPanel({ kind, media, seasons }: { kind: MediaKind; media: APIMedia; seasons: APISeason[] }) {
+function DownloadPanel({ kind, media, seasons, onWatch }: { kind: MediaKind; media: APIMedia; seasons: APISeason[]; onWatch: (source: SourceLink, title: string) => void }) {
   const { t } = useI18n();
   const [seasonIndex, setSeasonIndex] = useState(0);
 
@@ -120,7 +155,7 @@ function DownloadPanel({ kind, media, seasons }: { kind: MediaKind; media: APIMe
 
       <div className="space-y-6 p-5 sm:p-6">
         {isMovie ? (
-          <SourceLinks sources={movieSources} emptyTitle={t.details.noLinks} emptyBody={t.details.noLinksHint} />
+          <SourceLinks sources={movieSources} emptyTitle={t.details.noLinks} emptyBody={t.details.noLinksHint} onWatch={(source) => onWatch(source, getTitle(media))} />
         ) : !seasons.length ? (
           <EmptyState icon={Tv} title={t.details.noSeasons} description={t.details.noSeasonsHint} className="py-10" />
         ) : (
@@ -149,7 +184,7 @@ function DownloadPanel({ kind, media, seasons }: { kind: MediaKind; media: APIMe
 
           </>
         )}
-        {!isMovie ? <SeriesEpisodeGuide media={media} episodes={episodes} selectedSeason={seasonIndex + 1} /> : null}
+        {!isMovie ? <SeriesEpisodeGuide media={media} episodes={episodes} selectedSeason={seasonIndex + 1} onWatch={onWatch} /> : null}
       </div>
     </section>
   );
@@ -158,6 +193,7 @@ function DownloadPanel({ kind, media, seasons }: { kind: MediaKind; media: APIMe
 export function MediaDetails({ kind, mediaId }: { kind: MediaKind; mediaId: number }) {
   const { t } = useI18n();
   const { media, isLoading, error, refetch } = useMediaDetails(kind, mediaId);
+  const [player, setPlayer] = useState<{ source: SourceLink; title: string } | null>(null);
   const seasonsQuery = useSeasons(mediaId, kind === "series" && Boolean(media));
   const seasons = seasonsQuery.data ?? [];
 
@@ -213,6 +249,7 @@ export function MediaDetails({ kind, mediaId }: { kind: MediaKind; mediaId: numb
   const countries = getCountries(media);
   const sources = getSources(media);
   const trailer = sources.find((source) => source.isTrailer);
+  const movieStream = kind === "movie" ? sources.find((source) => isPlayableVideoSource(source)) : undefined;
   const parsed = parseDescription(media.description);
   const bestQuality = sources.find((source) => !source.isTrailer)?.quality;
 
@@ -306,10 +343,17 @@ export function MediaDetails({ kind, mediaId }: { kind: MediaKind; mediaId: numb
               ) : null}
 
               <div className="flex flex-wrap items-center gap-3 pt-1">
-                <ButtonLink href="#downloads" size="lg">
-                  <ArrowDownToLine className="size-4" />
-                  {t.actions.download}
-                </ButtonLink>
+                {movieStream ? (
+                  <Button size="lg" onClick={() => setPlayer({ source: movieStream, title })}>
+                    <Play className="size-4" fill="currentColor" />
+                    {t.actions.watchOnline}
+                  </Button>
+                ) : (
+                  <ButtonLink href="#downloads" size="lg">
+                    <ArrowDownToLine className="size-4" />
+                    {t.actions.download}
+                  </ButtonLink>
+                )}
                 {trailer ? (
                   <a
                     href={trailer.url}
@@ -361,7 +405,7 @@ export function MediaDetails({ kind, mediaId }: { kind: MediaKind; mediaId: numb
           </section>
         ) : null}
 
-        <DownloadPanel kind={kind} media={media} seasons={seasons} />
+        <DownloadPanel kind={kind} media={media} seasons={seasons} onWatch={(source, title) => setPlayer({ source, title })} />
 
         <a
           href="#content"
@@ -371,6 +415,7 @@ export function MediaDetails({ kind, mediaId }: { kind: MediaKind; mediaId: numb
           {t.details.back}
         </a>
       </Container>
+      {player ? <OnlineVideoPlayer source={player.source} title={player.title} onClose={() => setPlayer(null)} /> : null}
     </AppShell>
   );
 }
