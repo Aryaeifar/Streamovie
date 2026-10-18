@@ -23,6 +23,12 @@ importers:
       react-native-safe-area-context:
         specifier: ^5.5.2
         version: 5.10.1(react-native-tvos@0.83.0-0)(react@19.2.0)
+      react-native-video:
+        specifier: ^6.19.3
+        version: 6.19.3(react-native-tvos@0.83.0-0)(react@19.2.0)
+      vazirmatn:
+        specifier: ^33.0.3
+        version: 33.0.3
     devDependencies:
       '@babel/core':
         specifier: ^7.25.2
@@ -2957,6 +2963,12 @@ packages:
       '@types/react':
         optional: true
 
+  react-native-video@6.19.3:
+    resolution: {integrity: sha512-hI0YhEH6NdkfbFfMoZTZizEmLIm13rLlMf6KyWlGSe0+6If7/gvhapR2j/BMKBEwmlAIZjU4A6ax4Qn7yssjLQ==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
   react-refresh@0.14.2:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
     engines: {node: '>=0.10.0'}
@@ -3397,6 +3409,9 @@ packages:
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
+
+  vazirmatn@33.0.3:
+    resolution: {integrity: sha512-fbjNc0CMjazZpIegWzz9OHGzI1APFboT+x7ZecXlUCtDe/nkyx7gtCTZnWS/+eeXG7fbfXymCPKJI8EsnM3iqw==}
 
   vlq@1.0.1:
     resolution: {integrity: sha512-gQpnTgkubC6hQgdIcRdYGDSDc+SaujOdyesZQMv6JlfQee/9Mp0Qhnys6WxDWvQnL5WZdT7o2Ul187aSt0Rq+w==}
@@ -7376,6 +7391,11 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  react-native-video@6.19.3(react-native-tvos@0.83.0-0)(react@19.2.0):
+    dependencies:
+      react: 19.2.0
+      react-native: react-native-tvos@0.83.0-0(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.83.0(@babel/core@7.29.7))(@types/react@19.3.0)(react-native-tvos@0.83.0-0)(react@19.2.0)
+
   react-refresh@0.14.2: {}
 
   react-test-renderer@19.2.0(react@19.2.0):
@@ -7865,6 +7885,8 @@ snapshots:
       convert-source-map: 2.0.0
 
   vary@1.1.2: {}
+
+  vazirmatn@33.0.3: {}
 
   vlq@1.0.1: {}
 

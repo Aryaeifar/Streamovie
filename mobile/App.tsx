@@ -7,18 +7,20 @@ import {
   Modal,
   Pressable,
   Platform,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
+  Switch,
   Text as NativeText,
   TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import Video, {type VideoRef} from 'react-native-video';
 import {STREAMOVIE_API_KEY} from './src/env.generated';
+import {imdbTop250Movies, imdbTop250Series} from './src/imdb-top250';
 
 type MediaKind = 'movie' | 'series';
 type AppTab = 'Home' | 'Movies' | 'Series' | 'Trending' | 'Saved' | 'Top Movies' | 'Top Series';
@@ -71,14 +73,64 @@ const NAV_ICONS: Record<NavIconName, number> = {
   settings: require('./assets/nav-icons/settings.png'),
   play: require('./assets/nav-icons/play.png'),
 };
-type AppSettings = {theme: ThemeId; locale: Locale; isPersian: boolean; setTheme: (value: ThemeId) => void; setLocale: (value: Locale) => void; openSettings: () => void; closeSettings: () => void; settingsOpen: boolean};
-const SettingsContext = createContext<AppSettings>({theme: 'netflix', locale: 'fa', isPersian: true, setTheme: () => {}, setLocale: () => {}, openSettings: () => {}, closeSettings: () => {}, settingsOpen: false});
+type AppSettings = {theme: ThemeId; locale: Locale; isPersian: boolean; showTop250Movies: boolean; showTop250Series: boolean; setTheme: (value: ThemeId) => void; setLocale: (value: Locale) => void; setShowTop250Movies: (value: boolean) => void; setShowTop250Series: (value: boolean) => void; openSettings: () => void; closeSettings: () => void; settingsOpen: boolean};
+const AppSettingsContextDefault: AppSettings = {theme: 'netflix', locale: 'fa', isPersian: true, showTop250Movies: true, showTop250Series: true, setTheme: () => {}, setLocale: () => {}, setShowTop250Movies: () => {}, setShowTop250Series: () => {}, openSettings: () => {}, closeSettings: () => {}, settingsOpen: false};
+const SettingsContext = createContext<AppSettings>(AppSettingsContextDefault);
 const tr = (locale: Locale, en: string, fa: string) => locale === 'fa' ? fa : en;
+const EXCLUDED_TITLES = new Set(['نسخه جدید ملودی باکس', 'نسخه جدید هورتون'].map(normalizeExcludedTitle));
+
+function normalizeExcludedTitle(value: string) {
+  return value.normalize('NFKC').replace(/[يى]/g, 'ی').replace(/ك/g, 'ک').replace(/[\u064B-\u065F\u0670]/g, '').replace(/[^\p{L}\p{N}]/gu, '').toLocaleLowerCase('fa');
+}
+
+function isExcludedTitle(raw: Record<string, any>) {
+  return [raw.title, raw.name].some((title) => typeof title === 'string' && EXCLUDED_TITLES.has(normalizeExcludedTitle(title)));
+}
+
+function normalizeChartTitle(title: string) {
+  return title.toLocaleLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+const CHARTS = {movie: imdbTop250Movies, series: imdbTop250Series} as const;
+
+function getTop250Rank(media: Media) {
+  const chart = CHARTS[media.kind];
+  const raw = media.raw;
+  const titles = [media.title, raw.original_title, raw.original_name, raw.originalTitle, raw.en_title];
+  const description = asText(raw.description, raw.summary);
+  for (const line of description.split(/\r?\n/)) {
+    if (!/(?:نام اصلی|نام انگلیسی)\s*[:：]/.test(line)) continue;
+    const original = line.split(/[:：]/).slice(1).join(':').trim();
+    if (original) titles.push(original);
+  }
+  const yearValue = Number(media.year || raw.year || raw.release_year);
+  const year = Number.isInteger(yearValue) && yearValue >= 1880 && yearValue <= 2100 ? yearValue : undefined;
+  for (const title of [...new Set(titles.filter((value): value is string => typeof value === 'string' && value.length > 0))]) {
+    const normalized = normalizeChartTitle(title);
+    const entry = chart.find((candidate) => {
+      const candidateTitles = [candidate.title, candidate.originalTitle].map(normalizeChartTitle);
+      if (!candidateTitles.includes(normalized)) return false;
+      const titleYear = title.match(/\b(18\d{2}|19\d{2}|20\d{2}|2100)\s*$/)?.[1];
+      const actualYear = year ?? (titleYear ? Number(titleYear) : undefined);
+      return !actualYear || !candidate.year || actualYear === candidate.year;
+    });
+    if (entry) return chart.findIndex((candidate) => candidate.id === entry.id) + 1;
+  }
+  return Number.MAX_SAFE_INTEGER;
+}
+
+function rankTop250(items: Media[], kind: MediaKind) {
+  return items.map((item) => ({item, rank: item.kind === kind ? getTop250Rank(item) : Number.MAX_SAFE_INTEGER}))
+    .filter(({rank}) => rank !== Number.MAX_SAFE_INTEGER)
+    .sort((first, second) => first.rank - second.rank)
+    .map(({item}) => item);
+}
 function Text(props: React.ComponentProps<typeof NativeText>) {
   const {isPersian} = useContext(SettingsContext);
   const content = React.Children.toArray(props.children).filter((child): child is string => typeof child === 'string').join(' ');
-  const usesPersianScript = isPersian && /[\u0600-\u06FF]/.test(content);
-  return <NativeText {...props} style={[usesPersianScript ? styles.defaultRtlText : styles.defaultLtrText, props.style]} />;
+  const containsPersian = /[\u0600-\u06FF]/.test(content);
+  const textDirection = containsPersian ? styles.defaultRtlText : isPersian ? styles.defaultRtlText : styles.defaultLtrText;
+  return <NativeText {...props} style={[textDirection, containsPersian && styles.persianFont, props.style]} />;
 }
 const API_HOSTS = [
   'https://server-hi-speed-iran.info',
@@ -152,18 +204,18 @@ async function apiGet(path: string) {
   throw lastError instanceof Error ? lastError : new Error('Could not reach the catalog');
 }
 
-async function loadMedia(kind: MediaKind, key: string, query = ''): Promise<Media[]> {
+async function loadMedia(kind: MediaKind, key: string, query = '', sort = 'created'): Promise<Media[]> {
   const json = query.trim()
     ? await apiGet(`/api/search/${encode(query.trim())}/${encode(key)}/`)
-    : await apiGet(`/api/${kind === 'movie' ? 'movie' : 'serie'}/by/filtres/0/created/0/${encode(key)}`);
+    : await apiGet(`/api/${kind === 'movie' ? 'movie' : 'serie'}/by/filtres/0/${encode(sort)}/0/${encode(key)}`);
   const records = Array.isArray(json) ? json : Array.isArray(json?.posters) ? json.posters : [];
-  return records.map((record: Record<string, any>) => parseMedia(record, kind));
+  return records.filter((record: Record<string, any>) => !isExcludedTitle(record)).map((record: Record<string, any>) => parseMedia(record, kind));
 }
 
 async function searchHome(key: string, query: string): Promise<Media[]> {
   const json = await apiGet(`/api/search/${encode(query.trim())}/${encode(key)}/`);
   const records = Array.isArray(json?.posters) ? json.posters : [];
-  return records.map((record: Record<string, any>) => {
+  return records.filter((record: Record<string, any>) => !isExcludedTitle(record)).map((record: Record<string, any>) => {
     const type = asText(record.type, record.kind, record.media_type).toLowerCase();
     return parseMedia(record, /serie|series|tv/.test(type) ? 'series' : 'movie');
   });
@@ -190,7 +242,7 @@ async function loadGenres(key: string): Promise<Genre[]> {
 }
 
 function App() {
-  const {theme, locale, isPersian, setTheme, setLocale, openSettings, closeSettings, settingsOpen} = useContext(SettingsContext);
+  const {theme, locale, isPersian, showTop250Movies, showTop250Series, setTheme, setLocale, setShowTop250Movies, setShowTop250Series, openSettings, closeSettings, settingsOpen} = useContext(SettingsContext);
   const palette = THEMES[theme];
   const {width} = useWindowDimensions();
   const isTV = Platform.isTV || width >= 1000;
@@ -202,8 +254,11 @@ function App() {
   const [keyInput, setKeyInput] = useState('');
   const [tab, setTab] = useState<AppTab>('Home');
   const [items, setItems] = useState<Media[]>([]);
+  const [topMovieItems, setTopMovieItems] = useState<Media[]>([]);
+  const [topSeriesItems, setTopSeriesItems] = useState<Media[]>([]);
   const [saved, setSaved] = useState<Media[]>([]);
   const [selected, setSelected] = useState<Media | null>(null);
+  const [playing, setPlaying] = useState<{source: Source; title: string} | null>(null);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [seasonIndex, setSeasonIndex] = useState(0);
   const [query, setQuery] = useState('');
@@ -233,18 +288,25 @@ function App() {
       if (tab === 'Home' || tab === 'Trending') {
         if (searchText.trim()) setItems(await searchHome(apiKey, searchText));
         else {
-          const [movies, series] = await Promise.all([loadMedia('movie', apiKey), loadMedia('series', apiKey)]);
+          const [movies, series, topMovies, topSeries] = await Promise.all([
+            loadMedia('movie', apiKey), loadMedia('series', apiKey),
+            tab === 'Home' && showTop250Movies ? loadMedia('movie', apiKey, '', 'imdb') : Promise.resolve([]),
+            tab === 'Home' && showTop250Series ? loadMedia('series', apiKey, '', 'imdb') : Promise.resolve([]),
+          ]);
           const all = [...movies, ...series];
           setItems(tab === 'Trending' ? all.sort((a, b) => Number(b.rating) - Number(a.rating)) : all);
+          setTopMovieItems(rankTop250(topMovies, 'movie'));
+          setTopSeriesItems(rankTop250(topSeries, 'series'));
         }
       } else {
-        const loaded = await loadMedia(activeKind, apiKey, searchText);
-        setItems(tab.startsWith('Top ') ? loaded.sort((a, b) => Number(b.rating) - Number(a.rating)) : loaded);
+        const isTopTab = tab.startsWith('Top ');
+        const loaded = await loadMedia(activeKind, apiKey, searchText, isTopTab ? 'imdb' : 'created');
+        setItems(isTopTab ? rankTop250(loaded, activeKind) : loaded);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load titles');
     } finally { setLoading(false); }
-  }, [activeKind, apiKey, tab]);
+  }, [activeKind, apiKey, showTop250Movies, showTop250Series, tab]);
 
   useEffect(() => { if (apiKey && !selected) refresh(''); }, [apiKey, tab, selected, refresh]);
 
@@ -272,9 +334,12 @@ function App() {
 
   const movies = useMemo(() => items.filter(item => item.kind === 'movie'), [items]);
   const series = useMemo(() => items.filter(item => item.kind === 'series'), [items]);
-  const topMovies = useMemo(() => [...movies].sort((a, b) => Number(b.rating) - Number(a.rating)).slice(0, 24), [movies]);
-  const topSeries = useMemo(() => [...series].sort((a, b) => Number(b.rating) - Number(a.rating)).slice(0, 24), [series]);
-  const visibleItems = (tab === 'Saved' ? saved : items).filter(item => !genreId || (Array.isArray(item.raw.genres) && item.raw.genres.some((genre: any) => Number(typeof genre === 'object' ? genre.id : genre) === genreId)) || Number(item.raw.genre_id) === genreId);
+  const topMovies = useMemo(() => topMovieItems.slice(0, 24), [topMovieItems]);
+  const topSeries = useMemo(() => topSeriesItems.slice(0, 24), [topSeriesItems]);
+  const visibleItems = useMemo(() => (tab === 'Saved' ? saved : items).filter(item => !isExcludedTitle(item.raw) && (!genreId || (Array.isArray(item.raw.genres) && item.raw.genres.some((genre: any) => Number(typeof genre === 'object' ? genre.id : genre) === genreId)) || Number(item.raw.genre_id) === genreId)), [items, saved, tab, genreId]);
+  const homeSectionTabs: [string, string][] = [[tr(locale, 'Featured', 'ویژه'), 'featured'], [tr(locale, 'Movies', 'فیلم‌ها'), 'movies'], [tr(locale, 'Series', 'سریال‌ها'), 'series']];
+  if (showTop250Movies) homeSectionTabs.push([tr(locale, 'Top 250 Movies', '۲۵۰ فیلم برتر'), 'topMovies']);
+  if (showTop250Series) homeSectionTabs.push([tr(locale, 'Top 250 Series', '۲۵۰ سریال برتر'), 'topSeries']);
   const sectionTitle = tr(locale, tab === 'Saved' ? 'My List' : tab === 'Trending' ? 'Trending now' : tab.startsWith('Top ') ? `Top rated ${activeKind === 'movie' ? 'movies' : 'series'}` : `Explore ${tab.toLowerCase()}`, tab === 'Saved' ? 'فهرست من' : tab === 'Trending' ? 'محبوب‌های این روزها' : tab.startsWith('Top ') ? `برترین ${activeKind === 'movie' ? 'فیلم‌ها' : 'سریال‌ها'}` : tab === 'Movies' ? 'کاوش فیلم‌ها' : tab === 'Series' ? 'کاوش سریال‌ها' : 'کاوش');
   const sectionSubtitle = tab === 'Saved' ? tr(locale, 'The movies and series you have saved for later.', 'فیلم‌ها و سریال‌هایی که برای بعد ذخیره کرده‌اید.')
     : tab === 'Trending' ? tr(locale, 'Popular titles across movies and series.', 'عنوان‌های محبوب فیلم و سریال.')
@@ -300,37 +365,42 @@ function App() {
     </View> : null}
   </View>;
 
-  if (!apiKey) return <SafeAreaProvider><SafeAreaView style={[styles.safe, {backgroundColor: palette.bg, direction: isPersian ? 'rtl' : 'ltr'}]}><StatusBar barStyle="light-content" backgroundColor={palette.bg} /><View style={styles.keyPanel}>
+  if (!apiKey) return <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={[styles.safe, {backgroundColor: palette.bg, direction: isPersian ? 'rtl' : 'ltr'}]}><StatusBar barStyle="light-content" backgroundColor={palette.bg} /><View style={styles.keyPanel}>
     <Text style={styles.brand}>STREAMOVIE</Text><Text style={[styles.sectionTitle, isPersian && styles.rtlText]}>{tr(locale, 'Connect your catalog', 'اتصال به فهرست فیلم‌ها')}</Text>
     <Text style={[styles.body, isPersian && styles.rtlText]}>{tr(locale, 'Enter your Streamovie API key to load movies and series. The key is stored on this device and sent to the catalog API.', 'برای بارگذاری فیلم‌ها و سریال‌ها، کلید API استریمووی را وارد کنید. کلید روی همین دستگاه ذخیره می‌شود.')}</Text>
     <TextInput value={keyInput} onChangeText={setKeyInput} placeholder="Catalog API key" placeholderTextColor={COLORS.muted} autoCapitalize="none" autoCorrect={false} secureTextEntry style={[styles.searchInput, styles.ltrInput]} />
     <Action label={tr(locale, 'Continue', 'ادامه')} active onPress={saveKey} />
-  </View></SafeAreaView></SafeAreaProvider>;
+  </View></SafeAreaView>;
 
-  return <SafeAreaProvider><SafeAreaView style={[styles.safe, {backgroundColor: palette.bg, direction: isPersian ? 'rtl' : 'ltr'}]}><StatusBar barStyle="light-content" backgroundColor={palette.bg} />
+  return <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={[styles.safe, {backgroundColor: palette.bg, direction: isPersian ? 'rtl' : 'ltr'}]}><StatusBar barStyle="light-content" backgroundColor={palette.bg} />
     <View style={[styles.appFrame, isTV && styles.tvAppFrame, {direction: isPersian ? 'rtl' : 'ltr', flexDirection: isTV ? 'row' : 'column'}]}>
-      {isTV ? <TVNavigation selected={tab} onSelect={value => { setSelected(null); setTab(value); setQuery(''); }} onSettings={openSettings} accent={palette.accent} locale={locale} /> : null}
+      {isTV ? <TVNavigation selected={tab} onSelect={value => { setSelected(null); setTab(value); setQuery(''); }} onSettings={openSettings} accent={palette.accent} locale={locale} showTop250Movies={showTop250Movies} showTop250Series={showTop250Series} /> : null}
       <View style={[styles.mainContent, {backgroundColor: palette.bg, direction: isPersian ? 'rtl' : 'ltr'}]}>
       {selected ? <ScrollView contentContainerStyle={[styles.detailScroll, {direction: isPersian ? 'rtl' : 'ltr'}]}>
         {header}
-        <Detail item={selected} isSaved={saved.some(value => value.id === selected.id && value.kind === selected.kind)} onSave={() => toggleSaved(selected)} seasons={seasons} seasonIndex={seasonIndex} onSeason={setSeasonIndex} isTV={isTV} isWide={isTablet} />
+        <Detail item={selected} isSaved={saved.some(value => value.id === selected.id && value.kind === selected.kind)} onSave={() => toggleSaved(selected)} seasons={seasons} seasonIndex={seasonIndex} onSeason={setSeasonIndex} isTV={isTV} isWide={isTablet} onWatch={(source, title) => setPlaying({source, title})} />
         <SiteFooter onNavigate={value => { setSelected(null); setTab(value); }} />
       </ScrollView> : tab === 'Home' ? <ScrollView ref={homeScrollRef} contentContainerStyle={[styles.homeContent, {direction: isPersian ? 'rtl' : 'ltr'}]}>
-        {isTV ? <View style={[styles.homeSectionTabs, isPersian && styles.rtlRow]}>{[[tr(locale, 'Featured', 'ویژه'), 'featured'], [tr(locale, 'Movies', 'فیلم‌ها'), 'movies'], [tr(locale, 'Series', 'سریال‌ها'), 'series'], [tr(locale, 'Top Movies', 'برترین فیلم‌ها'), 'topMovies'], [tr(locale, 'Top Series', 'برترین سریال‌ها'), 'topSeries']].map(([label, target], index) => <Pressable key={target} onPress={() => homeScrollRef.current?.scrollTo({y: homeSectionY.current[target] ?? 0, animated: true})} onFocus={() => {}} style={[styles.homeSectionTab, index === 0 && styles.homeSectionTabActive]}><Text style={[styles.homeSectionTabText, index === 0 && styles.homeSectionTabTextActive]}>{label}</Text></Pressable>)}</View> : header}
+        {isTV ? <View style={[styles.homeSectionTabs, isPersian && styles.rtlRow]}>{homeSectionTabs.map(([label, target], index) => <Pressable key={target} onPress={() => homeScrollRef.current?.scrollTo({y: homeSectionY.current[target] ?? 0, animated: true})} onFocus={() => {}} style={[styles.homeSectionTab, index === 0 && styles.homeSectionTabActive]}><Text style={[styles.homeSectionTabText, index === 0 && styles.homeSectionTabTextActive]}>{label}</Text></Pressable>)}</View> : header}
         <View onLayout={event => { homeSectionY.current.featured = event.nativeEvent.layout.y; }}>
         {items[0] ? <Spotlight item={items[0]} onPress={() => open(items[0])} isTV={isTV} /> : loading ? <View style={styles.heroLoading}><ActivityIndicator color={palette.accent} size="large" /></View> : null}
         </View>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
         <View onLayout={event => { homeSectionY.current.movies = event.nativeEvent.layout.y; }}><MediaRail title="Movies" subtitle="Popular picks for your next movie night" items={movies.slice(0, 20)} width={width} isTV={isTV} landscape={isTV} onSelect={open} /></View>
         <View onLayout={event => { homeSectionY.current.series = event.nativeEvent.layout.y; }}><MediaRail title="Series" subtitle="Find your next series" items={series.slice(0, 20)} width={width} isTV={isTV} onSelect={open} /></View>
-        <View onLayout={event => { homeSectionY.current.topMovies = event.nativeEvent.layout.y; }}><MediaRail title="Top rated movies" items={topMovies} width={width} isTV={isTV} onSelect={open} /></View>
-        <View onLayout={event => { homeSectionY.current.topSeries = event.nativeEvent.layout.y; }}><MediaRail title="Top rated series" items={topSeries} width={width} isTV={isTV} onSelect={open} /></View>
+        {showTop250Movies ? <View onLayout={event => { homeSectionY.current.topMovies = event.nativeEvent.layout.y; }}><MediaRail title="IMDb Top 250 movies" items={topMovies} width={width} isTV={isTV} onSelect={open} /></View> : null}
+        {showTop250Series ? <View onLayout={event => { homeSectionY.current.topSeries = event.nativeEvent.layout.y; }}><MediaRail title="IMDb Top 250 series" items={topSeries} width={width} isTV={isTV} onSelect={open} /></View> : null}
         <SiteFooter onNavigate={value => { setSelected(null); setTab(value); }} />
         {!loading && !items.length ? <View style={styles.empty}><Text style={styles.body}>{error || tr(locale, 'No titles to show.', 'عنوانی برای نمایش نیست.')}</Text></View> : null}
       </ScrollView> : <FlatList
         key={`${columns}-${tab}`}
         data={orderedItems}
         numColumns={columns}
+        initialNumToRender={isTV ? 12 : 8}
+        maxToRenderPerBatch={isTV ? 18 : 10}
+        updateCellsBatchingPeriod={40}
+        windowSize={isTV ? 7 : 9}
+        removeClippedSubviews={Platform.OS === 'android' && !isTV}
         keyExtractor={(item, index) => `${item.kind}-${item.id}-${index}`}
         ListHeaderComponent={<>{header}<View style={[styles.listIntro, {backgroundColor: `${palette.panel}cc`}]}>
           <View style={[styles.listTitleRow, isPersian && styles.rtlRow]}>
@@ -355,8 +425,9 @@ function App() {
       </View>
       {!isTV ? <BottomNavigation selected={tab} onSelect={value => { setSelected(null); setTab(value); setQuery(''); }} /> : null}
     </View>
-    <SettingsModal visible={settingsOpen} locale={locale} theme={theme} isTV={isTV} onClose={closeSettings} onLocale={setLocale} onTheme={setTheme} />
-  </SafeAreaView></SafeAreaProvider>;
+    <SettingsModal visible={settingsOpen} locale={locale} theme={theme} isTV={isTV} showTop250Movies={showTop250Movies} showTop250Series={showTop250Series} onClose={closeSettings} onLocale={setLocale} onTheme={setTheme} onShowTop250Movies={setShowTop250Movies} onShowTop250Series={setShowTop250Series} />
+    <VideoPlayerModal item={playing} locale={locale} isTV={isTV} onClose={() => setPlaying(null)} />
+  </SafeAreaView>;
 }
 
 function Action({label, onPress, active = false}: {label: string; onPress: () => void; active?: boolean}) {
@@ -387,25 +458,36 @@ function Spotlight({item, onPress, isTV}: {item: Media; onPress: () => void; isT
 
 function MediaRail({title, subtitle, items, width, isTV = false, landscape = false, onSelect}: {title: string; subtitle?: string; items: Media[]; width: number; isTV?: boolean; landscape?: boolean; onSelect: (item: Media) => void}) {
   const {locale} = useContext(SettingsContext);
-  const localizedTitle: Record<string, string> = {'Movies': 'فیلم‌ها', 'Series': 'سریال‌ها', 'Top rated movies': 'فیلم‌های برتر', 'Top rated series': 'سریال‌های برتر'};
+  const localizedTitle: Record<string, string> = {'Movies': 'فیلم‌ها', 'Series': 'سریال‌ها', 'Top rated movies': 'فیلم‌های برتر', 'Top rated series': 'سریال‌های برتر', 'IMDb Top 250 movies': '۲۵۰ فیلم برتر IMDb', 'IMDb Top 250 series': '۲۵۰ سریال برتر IMDb'};
   const localizedSubtitle: Record<string, string> = {'Popular picks for your next movie night': 'پیشنهادهایی برای تماشای فیلم', 'Find your next series': 'سریال بعدی خود را پیدا کنید'};
   const cardWidth = isTV ? Math.min(Math.max(width * 0.21, 190), 290) : Math.min(width * (width >= 620 ? 0.29 : 0.46), width >= 620 ? 240 : 210);
+  const tileWidth = landscape ? cardWidth * 1.35 : cardWidth;
   if (!items.length) return null;
   return <View style={styles.rail}>
     <View style={styles.railHeading}>
       <View><Text style={[styles.railTitle, locale === 'fa' && styles.rtlText]}>{locale === 'fa' ? localizedTitle[title] ?? title : title}</Text>{subtitle ? <Text style={[styles.railSubtitle, locale === 'fa' && styles.rtlText]}>{locale === 'fa' ? localizedSubtitle[subtitle] ?? subtitle : subtitle}</Text> : null}</View>
       <Text style={styles.railMore}>{tr(locale, 'SEE ALL  ›', 'مشاهده همه  ‹')}</Text>
     </View>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.railContent}>
-      {items.map((item, index) => <View key={`${item.kind}-${item.id}-${index}`} style={[styles.railCard, {width: landscape ? cardWidth * 1.35 : cardWidth}]}><MediaCard item={item} landscape={landscape} onPress={() => onSelect(item)} /></View>)}
-    </ScrollView>
+    <FlatList
+      horizontal
+      data={items}
+      keyExtractor={(item, index) => `${item.kind}-${item.id}-${index}`}
+      renderItem={({item}) => <View style={[styles.railCard, {width: tileWidth}]}><MediaCard item={item} landscape={landscape} onPress={() => onSelect(item)} /></View>}
+      getItemLayout={(_, index) => ({length: tileWidth + 12, offset: (tileWidth + 12) * index, index})}
+      initialNumToRender={isTV ? 5 : 4}
+      maxToRenderPerBatch={isTV ? 6 : 5}
+      windowSize={4}
+      removeClippedSubviews={Platform.OS === 'android' && !isTV}
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.railContent}
+    />
   </View>;
 }
 
 function BottomNavigation({selected, onSelect}: {selected: AppTab; onSelect: (tab: AppTab) => void}) {
   const {locale, theme} = useContext(SettingsContext);
   const accent = THEMES[theme].accent;
-  const items = [
+  const items: {name: AppTab; icon: NavIconName}[] = [
     {name: 'Home', icon: 'home'}, {name: 'Movies', icon: 'movies'}, {name: 'Series', icon: 'series'}, {name: 'Trending', icon: 'trending'}, {name: 'Saved', icon: 'saved'},
   ] as const;
   return <View style={styles.bottomNav}>
@@ -417,10 +499,12 @@ function BottomNavigation({selected, onSelect}: {selected: AppTab; onSelect: (ta
   </View>;
 }
 
-function TVNavigation({selected, onSelect, onSettings, accent, locale}: {selected: AppTab; onSelect: (tab: AppTab) => void; onSettings: () => void; accent: string; locale: Locale}) {
-  const items = [
-    {name: 'Home', icon: 'home'}, {name: 'Search', icon: 'search'}, {name: 'Trending', icon: 'trending'}, {name: 'Saved', icon: 'saved'}, {name: 'Movies', icon: 'movies'}, {name: 'Series', icon: 'series'}, {name: 'Top Movies', icon: 'top'},
-  ] as const;
+function TVNavigation({selected, onSelect, onSettings, accent, locale, showTop250Movies, showTop250Series}: {selected: AppTab; onSelect: (tab: AppTab) => void; onSettings: () => void; accent: string; locale: Locale; showTop250Movies: boolean; showTop250Series: boolean}) {
+  const items: {name: AppTab | 'Search'; icon: NavIconName}[] = [
+    {name: 'Home', icon: 'home'}, {name: 'Search', icon: 'search'}, {name: 'Trending', icon: 'trending'}, {name: 'Saved', icon: 'saved'}, {name: 'Movies', icon: 'movies'}, {name: 'Series', icon: 'series'},
+    ...(showTop250Movies ? [{name: 'Top Movies' as const, icon: 'top' as const}] : []),
+    ...(showTop250Series ? [{name: 'Top Series' as const, icon: 'top' as const}] : []),
+  ];
   return <View style={[styles.tvNavigation, locale === 'fa' && {borderRightWidth: 0, borderLeftWidth: 1, borderLeftColor: 'rgba(255,255,255,0.07)'}]}>
     <View style={[styles.tvBrandMark, {backgroundColor: accent}]}><NavIcon name="play" color="#fff" size={23} /></View>
     <View style={styles.tvNavigationItems}>{items.map(item => <TVNavigationItem key={item.name} item={item} selected={selected === item.name || (item.name === 'Search' && selected === 'Movies')} onSelect={() => onSelect(item.name === 'Search' ? 'Movies' : item.name)} />)}</View>
@@ -439,7 +523,7 @@ function TVNavigationItem({item, selected, onSelect}: {item: {name: AppTab | 'Se
   </Pressable>;
 }
 
-function MediaCard({item, isTV = false, landscape = false, onPress}: {item: Media; isTV?: boolean; landscape?: boolean; onPress: () => void}) {
+const MediaCard = React.memo(function MediaCard({item, isTV = false, landscape = false, onPress}: {item: Media; isTV?: boolean; landscape?: boolean; onPress: () => void}) {
   const [focused, setFocused] = useState(false);
   return <Pressable onPress={onPress} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={[styles.card, isTV && styles.cardTV, landscape && styles.cardLandscape, focused && styles.cardFocused]}>
     <View style={[styles.posterFrame, landscape && styles.landscapeFrame]}>{item.image ? <Image source={{uri: landscape ? item.backdrop || item.image : item.image}} resizeMode="cover" style={[styles.poster, landscape && styles.landscapePoster]} /> : <View style={[styles.poster, styles.posterPlaceholder]}><Text style={styles.body}>No artwork</Text></View>}
@@ -448,10 +532,10 @@ function MediaCard({item, isTV = false, landscape = false, onPress}: {item: Medi
     <Text numberOfLines={2} style={styles.cardTitle}>{item.title}</Text>
     <Text style={styles.meta}>{[item.year, item.rating ? `★ ${item.rating}` : ''].filter(Boolean).join(' · ')}</Text>
   </Pressable>;
-}
+}, (previous, next) => previous.item === next.item && previous.isTV === next.isTV && previous.landscape === next.landscape);
 
-function Detail({item, isSaved, onSave, seasons, seasonIndex, onSeason, isTV, isWide}: {
-  item: Media; isSaved: boolean; onSave: () => void; seasons: Season[]; seasonIndex: number; onSeason: (index: number) => void; isTV: boolean; isWide: boolean;
+function Detail({item, isSaved, onSave, seasons, seasonIndex, onSeason, isTV, isWide, onWatch}: {
+  item: Media; isSaved: boolean; onSave: () => void; seasons: Season[]; seasonIndex: number; onSeason: (index: number) => void; isTV: boolean; isWide: boolean; onWatch: (source: Source, title: string) => void;
 }) {
   const {locale, theme, isPersian} = useContext(SettingsContext);
   const accent = THEMES[theme].accent;
@@ -488,7 +572,7 @@ function Detail({item, isSaved, onSave, seasons, seasonIndex, onSeason, isTV, is
     </View> : null}
     {item.kind === 'movie' ? <View style={[styles.section, {backgroundColor: THEMES[theme].panel}]}>
       <View style={styles.detailSectionHeading}><View><Text style={[styles.sectionTitle, isPersian && styles.rtlText]}>{tr(locale, 'Downloads', 'دانلودها')}</Text><Text style={[styles.railSubtitle, isPersian && styles.rtlText]}>{tr(locale, 'Choose a quality to open the download source.', 'کیفیت موردنظر را برای دریافت لینک دانلود انتخاب کنید.')}</Text></View></View>
-      <SourceGrid sources={mediaSources} columns={sourceColumns} />
+      <SourceGrid sources={mediaSources} columns={sourceColumns} title={item.title} onWatch={onWatch} />
     </View> : <View style={[styles.section, {backgroundColor: THEMES[theme].panel}]}>
       <View style={styles.detailSectionHeading}><View><Text style={[styles.sectionTitle, isPersian && styles.rtlText]}>{tr(locale, 'Episode guide', 'راهنمای قسمت‌ها')}</Text><Text style={[styles.railSubtitle, isPersian && styles.rtlText]}>{tr(locale, 'Select a season, then choose an episode.', 'فصل را انتخاب کنید و سپس قسمت موردنظر را برگزینید.')}</Text></View></View>
       {!seasons.length ? <Text style={[styles.body, isPersian && styles.rtlText]}>{tr(locale, 'Loading episodes, or no episodes are available.', 'قسمتی یافت نشد یا در حال بارگذاری قسمت‌ها هستیم.')}</Text> : <>
@@ -499,7 +583,7 @@ function Detail({item, isSaved, onSave, seasons, seasonIndex, onSeason, isTV, is
           {seasons[seasonIndex]?.episodes.map((episode, index) => <View key={`${episode.title}-${index}`} style={[styles.episode, {width: `${100 / episodeColumns}%`} ]}>
             <Text style={styles.episodeNumber}>S{String(seasonIndex + 1).padStart(2, '0')} · E{String(index + 1).padStart(2, '0')}</Text>
             <Text numberOfLines={2} style={styles.episodeTitle}>{episode.title}</Text>
-            <SourceGrid sources={episode.sources} columns={sourceColumns} />
+            <SourceGrid sources={episode.sources} columns={sourceColumns} title={`${item.title} · ${episode.title}`} onWatch={onWatch} />
           </View>)}
         </View>
       </>}
@@ -507,19 +591,28 @@ function Detail({item, isSaved, onSave, seasons, seasonIndex, onSeason, isTV, is
   </View>;
 }
 
-function SourceGrid({sources, columns}: {sources: Source[]; columns: number}) {
-  if (!sources.length) return <Text style={styles.meta}>No download links available.</Text>;
-  return <View style={styles.sourceGrid}>{sources.map((source, index) => <SourceButton key={`${source.url}-${index}`} source={source} columns={columns} />)}</View>;
+function SourceGrid({sources, columns, title, onWatch}: {sources: Source[]; columns: number; title: string; onWatch: (source: Source, title: string) => void}) {
+  const {locale} = useContext(SettingsContext);
+  if (!sources.length) return <Text style={[styles.meta, locale === 'fa' && styles.rtlText]}>{tr(locale, 'No download links available.', 'لینک دانلودی موجود نیست.')}</Text>;
+  return <View style={styles.sourceGrid}>{sources.map((source, index) => <SourceButton key={`${source.url}-${index}`} source={source} columns={columns} title={title} onWatch={onWatch} />)}</View>;
 }
 
-function SourceButton({source, columns}: {source: Source; columns: number}) {
+function SourceButton({source, columns, title, onWatch}: {source: Source; columns: number; title: string; onWatch: (source: Source, title: string) => void}) {
   const {theme, locale} = useContext(SettingsContext);
   const accent = THEMES[theme].accent;
   const [focused, setFocused] = useState(false);
   const sourceWidth = (columns === 1 ? '100%' : `${100 / columns - 2}%`) as `${number}%` | '100%';
-  return <Pressable onPress={() => { void Linking.openURL(source.url); }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={[styles.source, {width: sourceWidth}, focused && {borderColor: accent, borderWidth: 2}]}>
-    <View style={styles.sourceCard}><Text numberOfLines={1} style={[styles.sourceText, locale === 'fa' && styles.rtlText]}>↓  {source.quality}</Text><Text style={styles.sourceHint}>{tr(locale, 'DOWNLOAD SOURCE', 'لینک دانلود')}</Text></View>
-  </Pressable>;
+  return <View style={[styles.source, {width: sourceWidth}, focused && {borderColor: accent, borderWidth: 2}]}>
+    <View style={styles.sourceCard}>
+      <Text numberOfLines={1} style={[styles.sourceText, locale === 'fa' && styles.rtlText]}>↓  {source.quality}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={tr(locale, `Watch ${title} online`, `تماشای آنلاین ${title}`)} onPress={() => onWatch(source, title)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={[styles.sourcePlayButton, {backgroundColor: `${accent}22`, borderColor: `${accent}77`}]}>
+        <Text numberOfLines={1} style={[styles.sourcePlayText, {color: accent}, locale === 'fa' && styles.rtlText]}>▶  {tr(locale, 'Watch online', 'تماشای آنلاین')}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={tr(locale, `Download ${source.quality}`, `دانلود ${source.quality}`)} onPress={() => { void Linking.openURL(source.url); }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={styles.sourceDownloadButton}>
+        <Text numberOfLines={1} style={[styles.sourceHint, locale === 'fa' && styles.rtlText]}>↓  {tr(locale, 'Download', 'دانلود')}</Text>
+      </Pressable>
+    </View>
+  </View>;
 }
 
 function SiteFooter({onNavigate}: {onNavigate: (tab: AppTab) => void}) {
@@ -541,41 +634,103 @@ function SiteFooter({onNavigate}: {onNavigate: (tab: AppTab) => void}) {
 export default function AppRoot() {
   const [theme, setTheme] = useState<ThemeId>('netflix');
   const [locale, setLocale] = useState<Locale>('fa');
+  const [showTop250Movies, setShowTop250Movies] = useState(true);
+  const [showTop250Series, setShowTop250Series] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   useEffect(() => {
-    Promise.all([AsyncStorage.getItem('app-theme'), AsyncStorage.getItem('app-locale')]).then(([savedTheme, savedLocale]) => {
+    Promise.all([AsyncStorage.getItem('app-theme'), AsyncStorage.getItem('app-locale'), AsyncStorage.getItem('show-top250-movies'), AsyncStorage.getItem('show-top250-series')]).then(([savedTheme, savedLocale, savedTopMovies, savedTopSeries]) => {
       if (savedTheme && savedTheme in THEMES) setTheme(savedTheme as ThemeId);
       if (savedLocale === 'en' || savedLocale === 'fa') setLocale(savedLocale);
+      if (savedTopMovies === 'false') setShowTop250Movies(false);
+      if (savedTopSeries === 'false') setShowTop250Series(false);
       setPreferencesLoaded(true);
     }).catch(() => setPreferencesLoaded(true));
   }, []);
   useEffect(() => { if (preferencesLoaded) void AsyncStorage.setItem('app-theme', theme); }, [preferencesLoaded, theme]);
   useEffect(() => { if (preferencesLoaded) void AsyncStorage.setItem('app-locale', locale); }, [preferencesLoaded, locale]);
-  const value = useMemo<AppSettings>(() => ({theme, locale, isPersian: locale === 'fa', setTheme, setLocale, openSettings: () => setSettingsOpen(true), closeSettings: () => setSettingsOpen(false), settingsOpen}), [theme, locale, settingsOpen]);
-  return <SettingsContext.Provider value={value}><App /></SettingsContext.Provider>;
+  useEffect(() => { if (preferencesLoaded) void AsyncStorage.setItem('show-top250-movies', String(showTop250Movies)); }, [preferencesLoaded, showTop250Movies]);
+  useEffect(() => { if (preferencesLoaded) void AsyncStorage.setItem('show-top250-series', String(showTop250Series)); }, [preferencesLoaded, showTop250Series]);
+  const value = useMemo<AppSettings>(() => ({theme, locale, isPersian: locale === 'fa', showTop250Movies, showTop250Series, setTheme, setLocale, setShowTop250Movies, setShowTop250Series, openSettings: () => setSettingsOpen(true), closeSettings: () => setSettingsOpen(false), settingsOpen}), [theme, locale, showTop250Movies, showTop250Series, settingsOpen]);
+  return <SafeAreaProvider><SettingsContext.Provider value={value}><App /></SettingsContext.Provider></SafeAreaProvider>;
 }
 
-function SettingsModal({visible, locale, theme, isTV, onClose, onLocale, onTheme}: {visible: boolean; locale: Locale; theme: ThemeId; isTV: boolean; onClose: () => void; onLocale: (value: Locale) => void; onTheme: (value: ThemeId) => void}) {
+function VideoPlayerModal({item, locale, isTV, onClose}: {item: {source: Source; title: string} | null; locale: Locale; isTV: boolean; onClose: () => void}) {
+  const videoRef = useRef<VideoRef>(null);
+  const [failed, setFailed] = useState(false);
+  const [focusedSeek, setFocusedSeek] = useState<'back' | 'forward' | null>(null);
+  useEffect(() => { setFailed(false); }, [item?.source.url]);
+  const seekBy = async (seconds: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    const position = await video.getCurrentPosition().catch(() => 0);
+    video.seek(Math.max(0, position + seconds));
+  };
+  return <Modal visible={!!item} animationType="fade" presentationStyle="fullScreen" onRequestClose={onClose}>
+    <SafeAreaProvider>
+      <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={[styles.playerSafeArea, {direction: locale === 'fa' ? 'rtl' : 'ltr'}]}>
+        <View style={[styles.playerHeader, locale === 'fa' && styles.rtlRow]}>
+          <Text numberOfLines={1} style={[styles.playerTitle, locale === 'fa' && styles.rtlText]}>{item?.title ?? ''}</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel={tr(locale, 'Close player', 'بستن پخش‌کننده')} onPress={onClose} style={styles.playerClose}>
+            <Text style={styles.playerCloseText}>×</Text>
+          </Pressable>
+        </View>
+        <View style={styles.playerVideoArea}>
+          {item ? <Video ref={videoRef} key={item.source.url} source={{uri: item.source.url}} controls resizeMode="contain" style={styles.playerVideo} onError={() => setFailed(true)} /> : null}
+          {failed ? <View pointerEvents="none" style={styles.playerError}><Text style={[styles.playerErrorText, locale === 'fa' && styles.rtlText]}>{tr(locale, 'This video could not be played.', 'پخش این ویدیو ممکن نیست.')}</Text></View> : null}
+        </View>
+        {isTV ? <View style={styles.playerSeekControls}>
+          <Pressable focusable accessibilityRole="button" accessibilityLabel={tr(locale, 'Back 10 seconds', '۱۰ ثانیه به عقب')} onFocus={() => setFocusedSeek('back')} onBlur={() => setFocusedSeek(null)} onPress={() => { void seekBy(-10); }} style={[styles.playerSeekButton, focusedSeek === 'back' && styles.playerSeekFocused]}>
+            <Text style={styles.playerSeekIcon}>↶</Text>
+            <Text style={[styles.playerSeekText, locale === 'fa' ? styles.defaultRtlText : styles.defaultLtrText]}>{tr(locale, '10 sec', '۱۰ ثانیه')}</Text>
+          </Pressable>
+          <Pressable focusable accessibilityRole="button" accessibilityLabel={tr(locale, 'Forward 10 seconds', '۱۰ ثانیه به جلو')} onFocus={() => setFocusedSeek('forward')} onBlur={() => setFocusedSeek(null)} onPress={() => { void seekBy(10); }} style={[styles.playerSeekButton, focusedSeek === 'forward' && styles.playerSeekFocused]}>
+            <Text style={styles.playerSeekIcon}>↷</Text>
+            <Text style={[styles.playerSeekText, locale === 'fa' ? styles.defaultRtlText : styles.defaultLtrText]}>{tr(locale, '10 sec', '۱۰ ثانیه')}</Text>
+          </Pressable>
+        </View> : null}
+      </SafeAreaView>
+    </SafeAreaProvider>
+  </Modal>;
+}
+
+function SettingsModal({visible, locale, theme, isTV, showTop250Movies, showTop250Series, onClose, onLocale, onTheme, onShowTop250Movies, onShowTop250Series}: {visible: boolean; locale: Locale; theme: ThemeId; isTV: boolean; showTop250Movies: boolean; showTop250Series: boolean; onClose: () => void; onLocale: (value: Locale) => void; onTheme: (value: ThemeId) => void; onShowTop250Movies: (value: boolean) => void; onShowTop250Series: (value: boolean) => void}) {
   const accent = THEMES[theme].accent;
   const languages: {id: Locale; label: string}[] = [{id: 'fa', label: 'فارسی'}, {id: 'en', label: 'English'}];
   const themeIds = Object.keys(THEMES) as ThemeId[];
   return <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <SafeAreaProvider><SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.modalSafeArea}>
     <View style={[styles.modalBackdrop, {direction: locale === 'fa' ? 'rtl' : 'ltr'}]}><View style={[styles.settingsPanel, isTV && styles.settingsPanelTV, {backgroundColor: THEMES[theme].panel, borderColor: `${accent}55`}]}>
       <View style={[styles.settingsHeader, locale === 'fa' && styles.rtlRow]}><View><Text style={[styles.settingsTitle, locale === 'fa' && styles.rtlText]}>{tr(locale, 'Settings', 'تنظیمات')}</Text><Text style={[styles.settingsDescription, locale === 'fa' && styles.rtlText]}>{tr(locale, 'Personalize your Streamovie app', 'اپلیکیشن استریمووی را شخصی‌سازی کنید')}</Text></View><Pressable onPress={onClose} onFocus={() => {}} style={styles.settingsClose}><Text style={styles.settingsCloseText}>×</Text></Pressable></View>
+      <ScrollView style={styles.settingsOptions} contentContainerStyle={styles.settingsOptionsContent} showsVerticalScrollIndicator={false}>
       <Text style={[styles.settingsSectionTitle, locale === 'fa' && styles.rtlText]}>{tr(locale, 'Language', 'زبان')}</Text>
       <View style={[styles.languageOptions, locale === 'fa' && styles.rtlRow]}>{languages.map(option => <Pressable key={option.id} onPress={() => onLocale(option.id)} onFocus={() => {}} style={[styles.languageOption, locale === option.id && {borderColor: accent, backgroundColor: `${accent}22`}]}><Text style={[styles.languageText, locale === 'fa' && styles.rtlText]}>{option.label}{locale === option.id ? '  ✓' : ''}</Text></Pressable>)}</View>
       <Text style={[styles.settingsSectionTitle, locale === 'fa' && styles.rtlText]}>{tr(locale, 'Theme', 'پوسته')}</Text>
       <View style={styles.themeOptions}>{themeIds.map(id => <Pressable key={id} onPress={() => onTheme(id)} onFocus={() => {}} style={[styles.themeOption, {width: `${isTV ? 32 : 48}%`}, theme === id && {borderColor: THEMES[id].accent}]}><View style={[styles.themeSwatch, {backgroundColor: THEMES[id].bg, borderColor: THEMES[id].accent}]}><View style={[styles.themeSwatchBar, {backgroundColor: THEMES[id].accent}]} /><Text style={{color: '#fff', fontSize: 12, fontWeight: '900'}}>S</Text></View><Text style={[styles.themeName, locale === 'fa' && styles.rtlText]}>{tr(locale, THEMES[id].label, ({netflix: 'نتفلیکس', midnight: 'نیمه‌شب', aurora: 'شفق قطبی', ocean: 'اقیانوس', sunset: 'غروب', candy: 'آبنباتی', noir: 'نوآر'} as Record<ThemeId, string>)[id])}{theme === id ? '  ✓' : ''}</Text></Pressable>)}</View>
+      <Text style={[styles.settingsSectionTitle, locale === 'fa' && styles.rtlText]}>{tr(locale, 'Home sections', 'بخش‌های صفحه اصلی')}</Text>
+      <SettingsToggle label={tr(locale, 'Show IMDb Top 250 movies', 'نمایش ۲۵۰ فیلم برتر IMDb')} value={showTop250Movies} locale={locale} accent={accent} onChange={onShowTop250Movies} />
+      <SettingsToggle label={tr(locale, 'Show IMDb Top 250 series', 'نمایش ۲۵۰ سریال برتر IMDb')} value={showTop250Series} locale={locale} accent={accent} onChange={onShowTop250Series} />
+      <Text style={[styles.settingsSectionTitle, locale === 'fa' && styles.rtlText]}>{tr(locale, 'Always hidden from lists', 'عنوان‌های همیشه پنهان از فهرست‌ها')}</Text>
+      <Text style={[styles.hiddenTitlesText, locale === 'fa' && styles.rtlText]}>نسخه جدید ملودی باکس · نسخه جدید هورتون</Text>
+      </ScrollView>
       <Pressable onPress={onClose} onFocus={() => {}} style={[styles.settingsDone, {backgroundColor: accent}]}><Text style={styles.settingsDoneText}>{tr(locale, 'Done', 'انجام شد')}</Text></Pressable>
     </View></View>
+    </SafeAreaView></SafeAreaProvider>
   </Modal>;
+}
+
+function SettingsToggle({label, value, locale, accent, onChange}: {label: string; value: boolean; locale: Locale; accent: string; onChange: (value: boolean) => void}) {
+  return <View style={[styles.settingToggleRow, locale === 'fa' && styles.rtlRow]}>
+    <Text style={[styles.settingToggleText, locale === 'fa' && styles.rtlText]}>{label}</Text>
+    <Switch value={value} onValueChange={onChange} trackColor={{false: '#383838', true: `${accent}99`}} thumbColor={value ? accent : '#aaa'} accessibilityLabel={label} />
+  </View>;
 }
 
 const styles = StyleSheet.create({
   safe: {flex: 1, backgroundColor: COLORS.bg},
   defaultRtlText: {writingDirection: 'rtl', textAlign: 'right'},
   defaultLtrText: {writingDirection: 'ltr', textAlign: 'left'},
+  persianFont: {fontFamily: 'Vazirmatn'},
   ltrInput: {writingDirection: 'ltr', textAlign: 'left'},
   appFrame: {flex: 1},
   tvAppFrame: {flexDirection: 'row'},
@@ -710,9 +865,12 @@ const styles = StyleSheet.create({
   section: {marginTop: 20, padding: 18, borderRadius: 26, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(16,16,16,0.9)'},
   sourceGrid: {flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4},
   source: {paddingVertical: 4, paddingHorizontal: 3},
-  sourceCard: {minHeight: 68, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.035)', borderRadius: 14, justifyContent: 'center', paddingHorizontal: 13, paddingVertical: 11},
+  sourceCard: {minHeight: 104, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.035)', borderRadius: 14, justifyContent: 'center', paddingHorizontal: 11, paddingVertical: 9},
   sourceText: {color: '#f6f6fb', fontSize: 13, fontWeight: '700'},
-  sourceHint: {color: '#777', fontSize: 9, letterSpacing: 1, marginTop: 5},
+  sourcePlayButton: {minHeight: 36, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderRadius: 9, marginTop: 8, paddingHorizontal: 6},
+  sourcePlayText: {fontSize: 11, fontWeight: '800'},
+  sourceDownloadButton: {minHeight: 30, justifyContent: 'center', marginTop: 2},
+  sourceHint: {color: '#aaa', fontSize: 10, fontWeight: '700'},
   seasonRow: {gap: 8, paddingVertical: 4},
   episodeGrid: {flexDirection: 'row', flexWrap: 'wrap', marginTop: 8},
   episode: {padding: 10, minWidth: 0},
@@ -720,7 +878,13 @@ const styles = StyleSheet.create({
   episodeTitle: {color: COLORS.text, fontSize: 15, fontWeight: '700', minHeight: 38},
   keyPanel: {flex: 1, padding: 24, justifyContent: 'center'},
   modalBackdrop: {flex: 1, backgroundColor: 'rgba(0,0,0,0.76)', alignItems: 'center', justifyContent: 'center', padding: 20},
+  modalSafeArea: {flex: 1},
   settingsPanel: {width: '100%', maxWidth: 560, maxHeight: '92%', borderWidth: 1, borderRadius: 24, padding: 22},
+  settingsOptions: {flexShrink: 1},
+  settingsOptionsContent: {paddingBottom: 4},
+  settingToggleRow: {minHeight: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)'},
+  settingToggleText: {flex: 1, color: '#eee', fontSize: 13, fontWeight: '600'},
+  hiddenTitlesText: {color: '#aaa6ba', fontSize: 13, lineHeight: 21, marginBottom: 6},
   settingsPanelTV: {maxWidth: 900, padding: 30},
   settingsHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 22},
   settingsTitle: {color: '#fff', fontSize: 24, fontWeight: '900'},
@@ -738,4 +902,18 @@ const styles = StyleSheet.create({
   themeName: {color: '#fff', fontSize: 13, fontWeight: '700', flexShrink: 1},
   settingsDone: {minHeight: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginTop: 20},
   settingsDoneText: {color: '#fff', fontSize: 15, fontWeight: '900'},
+  playerSafeArea: {flex: 1, backgroundColor: '#000', paddingHorizontal: 18},
+  playerHeader: {minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12},
+  playerTitle: {color: '#fff', fontSize: 17, fontWeight: '700', flex: 1},
+  playerClose: {width: 42, height: 42, borderRadius: 21, backgroundColor: '#222', alignItems: 'center', justifyContent: 'center'},
+  playerCloseText: {color: '#fff', fontSize: 28, lineHeight: 32},
+  playerVideoArea: {flex: 1, alignItems: 'center', justifyContent: 'center'},
+  playerVideo: {width: '100%', height: '100%'},
+  playerSeekControls: {minHeight: 78, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18},
+  playerSeekButton: {minWidth: 132, minHeight: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, borderWidth: 1, borderColor: 'rgba(255,255,255,0.20)', backgroundColor: '#202020', borderRadius: 28, paddingHorizontal: 16},
+  playerSeekFocused: {borderColor: '#fff', borderWidth: 2, backgroundColor: '#353535'},
+  playerSeekIcon: {color: '#fff', fontSize: 23, fontWeight: '700'},
+  playerSeekText: {color: '#fff', fontSize: 13, fontWeight: '800'},
+  playerError: {...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.65)'},
+  playerErrorText: {color: '#fff', fontSize: 16, fontWeight: '700', textAlign: 'center', paddingHorizontal: 24},
 });
