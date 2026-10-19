@@ -85,7 +85,7 @@ function TVNavigationItem({item, selected, onSelect}: {item: {name: AppTab | 'Se
   </Pressable>;
 }
 
-export const MediaCard = React.memo(function MediaCard({item, isTV = false, landscape = false, onPress}: {item: Media; isTV?: boolean; landscape?: boolean; onPress: () => void}) {
+export function MediaCard({item, isTV = false, landscape = false, onPress}: {item: Media; isTV?: boolean; landscape?: boolean; onPress: () => void}) {
   const [focused, setFocused] = useState(false);
   return <Pressable onPress={onPress} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={[styles.card, isTV && styles.cardTV, landscape && styles.cardLandscape, focused && styles.cardFocused]}>
     <View style={[styles.posterFrame, landscape && styles.landscapeFrame]}>{item.image ? <Image source={{uri: landscape ? item.backdrop || item.image : item.image}} resizeMode="cover" style={[styles.poster, landscape && styles.landscapePoster]} /> : <View style={[styles.poster, styles.posterPlaceholder]}><Text style={styles.body}>No artwork</Text></View>}
@@ -94,7 +94,7 @@ export const MediaCard = React.memo(function MediaCard({item, isTV = false, land
     <Text numberOfLines={2} style={styles.cardTitle}>{item.title}</Text>
     <Text style={styles.meta}>{[item.year, item.rating ? `★ ${item.rating}` : ''].filter(Boolean).join(' · ')}</Text>
   </Pressable>;
-}, (previous, next) => previous.item === next.item && previous.isTV === next.isTV && previous.landscape === next.landscape);
+};
 
 export function Detail({item, isSaved, onSave, seasons, seasonIndex, onSeason, isTV, isWide, onWatch}: {
   item: Media; isSaved: boolean; onSave: () => void; seasons: Season[]; seasonIndex: number; onSeason: (index: number) => void; isTV: boolean; isWide: boolean; onWatch: (source: Source, title: string) => void;

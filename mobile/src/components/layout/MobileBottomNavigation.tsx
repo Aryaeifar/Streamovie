@@ -1,5 +1,6 @@
 import React from 'react';
-import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, StyleSheet, View} from 'react-native';
+import {Text} from '../ui/Text';
 import type {AppTab, Locale} from '../../types/media';
 type Props = {selected: AppTab | string; locale: Locale; accent: string; onSelect: (tab: AppTab) => void};
 const items: {name: AppTab; en: string; fa: string; icon: number}[] = [

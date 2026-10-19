@@ -8,5 +8,4 @@ export const THEMES: Record<ThemeId, {label: string; bg: string; panel: string; 
   sunset: {label: 'Sunset', bg: '#0b0704', panel: '#19100b', accent: '#fb923c', accentDark: '#f43f5e'},
   candy: {label: 'Candy', bg: '#0b050c', panel: '#1a101c', accent: '#f472b6', accentDark: '#a855f7'},
   noir: {label: 'Noir', bg: '#0a0a0a', panel: '#181818', accent: '#a1a1aa', accentDark: '#71717a'},
-  light: {label: 'Light', bg: '#f5f5f7', panel: '#ffffff', accent: '#e50914', accentDark: '#b20710', text: '#111111', muted: '#555555'},
 };

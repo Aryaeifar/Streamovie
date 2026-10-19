@@ -174,7 +174,7 @@ function App() {
 
   if (!apiKey) return <ApiKeyScreen locale={locale} isPersian={isPersian} palette={palette} keyInput={keyInput} onChangeKey={setKeyInput} onSubmit={saveKey} />
 
-  return <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={[styles.safe, {backgroundColor: palette.bg, direction: isPersian ? 'rtl' : 'ltr'}]}><StatusBar barStyle={theme === "light" ? "dark-content" : "light-content"} backgroundColor={palette.bg} />
+  return <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={[styles.safe, {backgroundColor: palette.bg, direction: isPersian ? 'rtl' : 'ltr'}]}><StatusBar barStyle="light-content" backgroundColor={palette.bg} />
     <View style={[styles.appFrame, isTV && styles.tvAppFrame, {direction: isPersian ? 'rtl' : 'ltr', flexDirection: isTV ? 'row' : 'column'}]}>
       {isTV ? <TVNavigation selected={tab} onSelect={value => { setSelected(null); setTab(value); setSearchDraft(''); }} onSettings={openSettings} accent={palette.accent} locale={locale} showTop250Movies={showTop250Movies} showTop250Series={showTop250Series} /> : null}
       <View style={[styles.mainContent, {backgroundColor: palette.bg, direction: isPersian ? 'rtl' : 'ltr'}]}>
@@ -208,7 +208,7 @@ function App() {
 
 export default function AppRoot() {
   const [theme, setTheme] = useState<ThemeId>('netflix');
-  const [locale, setLocale] = useState<Locale>('fa');
+  const [locale, setLocale] = useState<Locale>('en');
   const [showTop250Movies, setShowTop250Movies] = useState(true);
   const [showTop250Series, setShowTop250Series] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
