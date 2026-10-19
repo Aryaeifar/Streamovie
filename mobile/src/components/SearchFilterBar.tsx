@@ -1,5 +1,5 @@
-import React from 'react';
-import {Pressable, StyleSheet, TextInput, View} from 'react-native';
+import React, {useState} from 'react';
+import {Image, Pressable, StyleSheet, TextInput, View} from 'react-native';
 import {Text} from './ui/Text';
 
 type Props = {
@@ -14,27 +14,144 @@ type Props = {
   onClear: () => void;
 };
 
-export function SearchFilterBar({value, placeholder, isPersian, accent, filtersOpen, onChange, onSubmit, onToggleFilters, onClear}: Props) {
-  return <View style={[styles.row, isPersian && styles.rowRtl]}>
-    <View style={[styles.box, {borderColor: `${accent}44`}, isPersian && styles.rowRtl]}>
-      <Text style={styles.glyph}>⌕</Text>
-      <TextInput value={value} onChangeText={onChange} onSubmitEditing={onSubmit} placeholder={placeholder} placeholderTextColor="#aaa6ba" returnKeyType="search" style={[styles.input, isPersian ? styles.rtlText : styles.ltrText]} />
-      <Pressable accessibilityRole="button" accessibilityLabel={isPersian ? 'باز کردن فیلترها' : 'Open filters'} onPress={onToggleFilters} style={[styles.filter, filtersOpen && {backgroundColor: `${accent}22`}] }><Text style={[styles.filterText, {color: accent}]}>☷</Text></Pressable>
+const SEARCH_ICON = require('../../assets/nav-icons/search.png');
+
+export function SearchFilterBar({
+  value,
+  placeholder,
+  accent,
+  filtersOpen,
+  onChange,
+  onSubmit,
+  onToggleFilters,
+  onClear,
+}: Props) {
+  const [inputFocused, setInputFocused] = useState(false);
+  const [filterFocused, setFilterFocused] = useState(false);
+
+  return (
+    <View style={barStyles.row}>
+      <View
+        style={[
+          barStyles.box,
+          inputFocused && {
+            borderColor: accent,
+            backgroundColor: 'rgba(24, 29, 40, 0.96)',
+          },
+        ]}>
+        <Image
+          source={SEARCH_ICON}
+          resizeMode="contain"
+          style={{
+            width: 17,
+            height: 17,
+            tintColor: inputFocused ? accent : '#8b949e',
+            marginRight: 6,
+          }}
+        />
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          onSubmitEditing={onSubmit}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
+          placeholder={placeholder}
+          placeholderTextColor="#7d8597"
+          returnKeyType="search"
+          style={barStyles.input}
+        />
+        {value.trim() ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Clear search"
+            onPress={onClear}
+            style={barStyles.clearInline}>
+            <Text style={barStyles.clearText}>×</Text>
+          </Pressable>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Toggle filters"
+          onFocus={() => setFilterFocused(true)}
+          onBlur={() => setFilterFocused(false)}
+          onPress={onToggleFilters}
+          style={[
+            barStyles.filterPill,
+            filtersOpen && barStyles.filterPillActive,
+            filterFocused && {borderColor: accent, borderWidth: 2},
+          ]}>
+          <Text
+            style={[
+              barStyles.filterText,
+              filtersOpen && barStyles.filterTextActive,
+            ]}>
+            Filters
+          </Text>
+        </Pressable>
+      </View>
     </View>
-    {value.trim() ? <Pressable accessibilityRole="button" accessibilityLabel={isPersian ? 'پاک کردن جستجو' : 'Clear search'} onPress={onClear} style={styles.clear}><Text style={styles.clearText}>×</Text></Pressable> : null}
-  </View>;
+  );
 }
 
-const styles = StyleSheet.create({
-  row: {flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 8, paddingHorizontal: 18},
-  rowRtl: {flexDirection: 'row-reverse'},
-  box: {flex: 1, minHeight: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, borderWidth: 1, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.055)'},
-  glyph: {color: '#aaa', fontSize: 24, marginHorizontal: 5},
-  input: {flex: 1, minHeight: 48, color: '#f6f3ff', paddingHorizontal: 9, paddingVertical: 8, fontSize: 15},
-  rtlText: {fontFamily: 'Vazirmatn', writingDirection: 'rtl', textAlign: 'right'},
-  ltrText: {writingDirection: 'ltr', textAlign: 'left'},
-  filter: {width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: 'rgba(255,255,255,0.07)'},
-  filterText: {fontSize: 23, fontWeight: '700'},
-  clear: {width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)'},
-  clearText: {color: '#fff', fontSize: 22},
+const barStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  box: {
+    flex: 1,
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 16,
+    paddingRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: 999,
+    backgroundColor: 'rgba(20, 24, 33, 0.90)',
+  },
+  input: {
+    flex: 1,
+    minHeight: 42,
+    color: '#ffffff',
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  filterPill: {
+    height: 32,
+    paddingHorizontal: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  filterPillActive: {
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
+  },
+  filterText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#d0d7de',
+  },
+  filterTextActive: {
+    color: '#090b10',
+    fontWeight: '700',
+  },
+  clearInline: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    marginRight: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  clearText: {color: '#fff', fontSize: 16, lineHeight: 18},
 });
