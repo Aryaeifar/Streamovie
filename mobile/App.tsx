@@ -17,7 +17,13 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
-import {STREAMOVIE_API_KEY} from './src/env.generated';
+let STREAMOVIE_API_KEY = '';
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  STREAMOVIE_API_KEY = require('./src/env.generated').STREAMOVIE_API_KEY ?? '';
+} catch {
+  STREAMOVIE_API_KEY = '';
+}
 import {isExcludedTitle, rankTop250} from './src/lib/media-mapping';
 import {
   loadGenres,
@@ -50,7 +56,7 @@ import {CatalogIntro} from './src/components/ui/CatalogIntro';
 import {ApiKeyScreen} from './src/components/ApiKeyScreen';
 import {VideoPlayerModal} from './src/components/player/VideoPlayerModal';
 import {LoadingOverlay} from './src/components/ui/States';
-import {SettingsModal} from './src/components/settings/SettingsModal';
+import {ProfileScreen} from './src/components/settings/SettingsModal';
 import {Detail} from './src/components/media/Detail';
 import {BottomNavigation as MobileBottomNavigation} from './src/components/layout/MobileBottomNavigation';
 
@@ -77,7 +83,7 @@ function App() {
   const columns = isTV ? 5 : isTablet ? 4 : 3;
   const homeScrollRef = useRef<ScrollView>(null);
   const homeSectionY = useRef<Record<string, number>>({});
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState(STREAMOVIE_API_KEY);
   const [keyInput, setKeyInput] = useState('');
   const [tab, setTab] = useState<AppTab>('Home');
   const [items, setItems] = useState<Media[]>([]);
@@ -178,10 +184,10 @@ function App() {
               loadMedia('movie', apiKey),
               loadMedia('series', apiKey),
               tab === 'Home' && showTop250Movies
-                ? loadMedia('movie', apiKey, '', 'imdb')
+                ? Promise.all(Array.from({length: 6}, (_, page) => loadMedia('movie', apiKey, '', 'imdb', page))).then((pages) => pages.flat())
                 : Promise.resolve([]),
               tab === 'Home' && showTop250Series
-                ? loadMedia('series', apiKey, '', 'imdb')
+                ? Promise.all(Array.from({length: 6}, (_, page) => loadMedia('series', apiKey, '', 'imdb', page))).then((pages) => pages.flat())
                 : Promise.resolve([]),
             ]);
             const all = [...movies, ...series];
@@ -199,12 +205,9 @@ function App() {
           }
         } else {
           const isTopTab = tab.startsWith('Top ');
-          const loaded = await loadMedia(
-            activeKind,
-            apiKey,
-            searchText,
-            isTopTab ? 'imdb' : 'created',
-          );
+          const loaded = isTopTab
+            ? (await Promise.all(Array.from({length: 6}, (_, page) => loadMedia(activeKind, apiKey, searchText, 'imdb', page)))).flat()
+            : await loadMedia(activeKind, apiKey, searchText, 'created');
           if (currentRequest === requestId.current) {
             setItems(isTopTab ? rankTop250(loaded, activeKind) : loaded);
           }
@@ -251,7 +254,8 @@ function App() {
   const navigateTo = useCallback((value: AppTab) => {
     setSelected(null);
     setTab(value);
-  }, []);
+    closeSettings();
+  }, [closeSettings]);
 
   const saveKey = async () => {
     const key = keyInput.trim();
@@ -289,11 +293,8 @@ function App() {
     () => items.filter(item => item.kind === 'series'),
     [items],
   );
-  const topMovies = useMemo(() => topMovieItems.slice(0, 24), [topMovieItems]);
-  const topSeries = useMemo(
-    () => topSeriesItems.slice(0, 24),
-    [topSeriesItems],
-  );
+  const topMovies = useMemo(() => topMovieItems, [topMovieItems]);
+  const topSeries = useMemo(() => topSeriesItems, [topSeriesItems]);
   const visibleItems = useMemo(
     () =>
       (tab === 'Saved' ? saved : items).filter(
@@ -339,7 +340,7 @@ function App() {
 
   const activeBg = isTV ? palette.tvBg ?? palette.bg : palette.bg;
   const fullBleedHome =
-    !isTV && !selected && tab === 'Home' && !searchDraft.trim();
+    !isTV && !selected && !settingsOpen && tab === 'Home' && !searchDraft.trim();
 
   const header = (
     <AppHeader
@@ -362,19 +363,6 @@ function App() {
       }}
     />
   );
-
-  if (!apiKey) {
-    return (
-      <ApiKeyScreen
-        locale="en"
-        isPersian={false}
-        palette={palette}
-        keyInput={keyInput}
-        onChangeKey={setKeyInput}
-        onSubmit={saveKey}
-      />
-    );
-  }
 
   return (
     <SafeAreaView
@@ -402,6 +390,7 @@ function App() {
               setSelected(null);
               setTab(value);
               setSearchDraft('');
+              closeSettings();
             }}
             onSettings={openSettings}
             accent={palette.accent}
@@ -412,7 +401,22 @@ function App() {
         ) : null}
 
         <View style={[styles.mainContent, {backgroundColor: activeBg}]}>
-          {selected ? (
+          {settingsOpen ? (
+            <ProfileScreen
+              visible
+              locale={locale}
+              theme={theme}
+              isTV={isTV}
+              showTop250Movies={showTop250Movies}
+              showTop250Series={showTop250Series}
+              savedCount={saved.length}
+              onClose={closeSettings}
+              onLocale={setLocale}
+              onTheme={setTheme}
+              onShowTop250Movies={setShowTop250Movies}
+              onShowTop250Series={setShowTop250Series}
+            />
+          ) : selected ? (
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.detailScroll}>
@@ -517,19 +521,6 @@ function App() {
         ) : null}
       </View>
 
-      <SettingsModal
-        visible={settingsOpen}
-        locale={locale}
-        theme={theme}
-        isTV={isTV}
-        showTop250Movies={showTop250Movies}
-        showTop250Series={showTop250Series}
-        onClose={closeSettings}
-        onLocale={setLocale}
-        onTheme={setTheme}
-        onShowTop250Movies={setShowTop250Movies}
-        onShowTop250Series={setShowTop250Series}
-      />
       <VideoPlayerModal
         item={playing}
         locale="en"

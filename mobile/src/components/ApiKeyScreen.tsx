@@ -30,7 +30,7 @@ export function ApiKeyScreen({
               <Text style={styles.brandMarkText}>N</Text>
             </View>
             <View>
-              <Text style={styles.brand}>Nuvio · Streamovie</Text>
+              <Text style={styles.brand}>Streamovie</Text>
               <Text style={styles.tagline}>Media Catalog Hub</Text>
             </View>
           </View>

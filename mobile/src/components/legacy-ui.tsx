@@ -1,9 +1,11 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import {
+  Animated,
   FlatList,
   Image,
   Linking,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -124,6 +126,27 @@ function SmoothTopFade({
   );
 }
 
+
+function CarouselDot({active}: {active: boolean}) {
+  const width = useRef(new Animated.Value(active ? 22 : 6)).current;
+  const opacity = useRef(new Animated.Value(active ? 1 : 0.45)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(width, {toValue: active ? 22 : 6, useNativeDriver: false, friction: 6}),
+      Animated.timing(opacity, {toValue: active ? 1 : 0.45, duration: 220, useNativeDriver: false}),
+    ]).start();
+  }, [active, opacity, width]);
+  return (
+    <Animated.View
+      style={[
+        styles.spotlightDot,
+        active && styles.spotlightDotActive,
+        {width, opacity},
+      ]}
+    />
+  );
+}
+
 export function Spotlight({
   item,
   featuredItems,
@@ -147,6 +170,20 @@ export function Spotlight({
       : [item];
   const [activeIndex, setActiveIndex] = useState(0);
   const [btnFocused, setBtnFocused] = useState(false);
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        Math.abs(gesture.dx) > 12 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx < -40) {
+          setActiveIndex(prev => (prev + 1) % slides.length);
+        } else if (gesture.dx > 40) {
+          setActiveIndex(prev => (prev - 1 + slides.length) % slides.length);
+        }
+      },
+    }),
+  ).current;
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -180,7 +217,7 @@ export function Spotlight({
   };
 
   return (
-    <View style={[styles.spotlightWrapper, isTV && styles.spotlightWrapperTV]}>
+    <View style={[styles.spotlightWrapper, isTV && styles.spotlightWrapperTV]} {...panResponder.panHandlers}>
       <Pressable
         onPress={handleOpen}
         style={[
@@ -244,12 +281,9 @@ export function Spotlight({
                     accessibilityRole="button"
                     accessibilityLabel={`Featured item ${idx + 1}`}
                     onPress={() => setActiveIndex(idx)}
-                    hitSlop={6}
-                    style={[
-                      styles.spotlightDot,
-                      active && styles.spotlightDotActive,
-                    ]}
-                  />
+                    hitSlop={6}>
+                    <CarouselDot active={active} />
+                  </Pressable>
                 );
               })}
             </View>
@@ -1227,7 +1261,7 @@ export function SiteFooter({onNavigate}: {onNavigate: (tab: AppTab) => void}) {
         <View style={[styles.footerMark, {backgroundColor: accent}]}>
           <Text style={styles.footerMarkText}>N</Text>
         </View>
-        <Text style={styles.footerBrandText}>Nuvio · Streamovie</Text>
+        <Text style={styles.footerBrandText}>Streamovie</Text>
       </View>
       <Text style={styles.footerDescription}>
         Stream and organize your movie and series catalog with artwork, ratings, and instant playback across mobile and TV.

@@ -22,7 +22,8 @@ for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
 }
 
 if (!apiKey || apiKey === 'your_api_key_here') {
-  throw new Error('NEXT_PUBLIC_STREAMOVIE_API_KEY is missing from the project .env file.');
+  console.warn('NEXT_PUBLIC_STREAMOVIE_API_KEY is missing; writing an empty catalog key.');
+  apiKey = '';
 }
 
 mkdirSync(dirname(outputPath), {recursive: true});

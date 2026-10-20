@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "start": "node scripts/sync-env.mjs && react-native start",
     "sync-env": "node scripts/sync-env.mjs",
+    "postinstall": "node scripts/sync-env.mjs",
     "build:android": "node scripts/sync-env.mjs && cd android && ./gradlew assembleRelease",
     "test": "jest"
   },

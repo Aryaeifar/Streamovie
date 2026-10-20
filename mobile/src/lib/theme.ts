@@ -35,7 +35,7 @@ export type ThemePalette = {
 
 export const THEMES: Record<ThemeId, ThemePalette> = {
   nuvio: {
-    label: 'NuvioMobile',
+    label: 'Streamovie',
     bg: '#07090d',
     tvBg: '#0e131b',
     panel: '#121721',

@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
-import {Linking, Modal, Pressable, SafeAreaView, View} from 'react-native';
+import {Modal, Pressable, SafeAreaView, View} from 'react-native';
 import {Text} from '../ui/Text';
 import Video, {type VideoRef} from 'react-native-video';
 import type {Locale, Source} from '../../types/media';
@@ -84,66 +84,11 @@ export function VideoPlayerModal({
               <Text style={styles.playerErrorText}>
                 This stream could not be decoded in the built-in player.
               </Text>
-              <Pressable
-                onPress={() => {
-                  void Linking.openURL(item.source.url);
-                }}
-                style={styles.spotlightWhitePillBtn}>
-                <Text style={styles.spotlightWhitePillBtnText}>
-                  Open in External Player
-                </Text>
-              </Pressable>
             </View>
           ) : null}
         </View>
 
-        <View style={styles.playerSeekControls}>
-          {(['back', 'forward'] as const).map(direction => (
-            <Pressable
-              key={direction}
-              focusable
-              accessibilityRole="button"
-              accessibilityLabel={
-                direction === 'back' ? 'Back 10 seconds' : 'Forward 10 seconds'
-              }
-              onFocus={() => setFocusedSeek(direction)}
-              onBlur={() => setFocusedSeek(null)}
-              onPress={() => {
-                void seekBy(direction === 'back' ? -10 : 10);
-              }}
-              style={[
-                styles.playerSeekButton,
-                focusedSeek === direction && [
-                  styles.playerSeekFocused,
-                  {borderColor: accent},
-                ],
-              ]}>
-              <Text style={styles.playerSeekIcon}>
-                {direction === 'back' ? '↶' : '↷'}
-              </Text>
-              <Text style={styles.playerSeekText}>10s</Text>
-            </Pressable>
-          ))}
-          {item ? (
-            <Pressable
-              focusable
-              accessibilityRole="button"
-              onFocus={() => setFocusedSeek('external')}
-              onBlur={() => setFocusedSeek(null)}
-              onPress={() => {
-                void Linking.openURL(item.source.url);
-              }}
-              style={[
-                styles.playerSeekButton,
-                focusedSeek === 'external' && [
-                  styles.playerSeekFocused,
-                  {borderColor: accent},
-                ],
-              ]}>
-              <Text style={styles.playerSeekText}>External Player</Text>
-            </Pressable>
-          ) : null}
-        </View>
+        {null}
       </SafeAreaView>
     </Modal>
   );

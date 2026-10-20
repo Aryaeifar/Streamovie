@@ -59,6 +59,8 @@ export function HomeScreen({
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
+        decelerationRate="fast"
+        scrollEventThrottle={16}
         contentContainerStyle={[styles.homeContent, styles.homeContentTV]}>
         {header}
         {error ? <ErrorMessage message={error} /> : null}
