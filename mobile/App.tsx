@@ -143,7 +143,7 @@ function App() {
           setPlaying(null);
           return true;
         }
-        if (settingsOpen) {
+        if (!isTV && settingsOpen) {
           closeSettings();
           return true;
         }
@@ -159,7 +159,7 @@ function App() {
       },
     );
     return () => subscription.remove();
-  }, [playing, settingsOpen, selected, tab, closeSettings]);
+  }, [playing, isTV, settingsOpen, selected, tab, closeSettings]);
 
   // Enforce LTR English layout
   useEffect(() => {
@@ -415,18 +415,16 @@ function App() {
           isTV && styles.tvAppFrame,
           {flexDirection: isTV ? 'row' : 'column'},
         ]}>
-        {/* NuvioTV Collapsible Navigation Drawer: Shown on root routes, hidden on full-screen Detail view */}
-        {isTV && !selected ? (
+        {/* Streamovie TV Web-Style Sidebar Navigation */}
+        {isTV ? (
           <TVNavigation
             selected={tab}
-            settingsActive={settingsOpen}
             onSelect={value => {
               setSelected(null);
               setTab(value);
               setSearchDraft('');
               closeSettings();
             }}
-            onSettings={openSettings}
             accent={palette.accent}
             locale="en"
             showTop250Movies={showTop250Movies}
@@ -435,7 +433,7 @@ function App() {
         ) : null}
 
         <View style={[styles.mainContent, {backgroundColor: activeBg}]}>
-          {settingsOpen ? (
+          {!isTV && settingsOpen ? (
             <ProfileScreen
               visible
               locale={locale}
@@ -571,7 +569,7 @@ function App() {
 }
 
 export default function AppRoot() {
-  const [theme, setTheme] = useState<ThemeId>('nuvio');
+  const [theme, setTheme] = useState<ThemeId>('streamovie');
   const [locale, setLocale] = useState<Locale>('en');
   const [showTop250Movies, setShowTop250Movies] = useState(true);
   const [showTop250Series, setShowTop250Series] = useState(true);
@@ -584,13 +582,13 @@ export default function AppRoot() {
 
   useEffect(() => {
     Promise.all([
-      AsyncStorage.getItem('nuvio-app-theme'),
+      AsyncStorage.getItem('streamovie-app-theme'),
       AsyncStorage.getItem('show-top250-movies'),
       AsyncStorage.getItem('show-top250-series'),
-      AsyncStorage.getItem('nuvio-liquid-glass'),
-      AsyncStorage.getItem('nuvio-landscape-cards'),
-      AsyncStorage.getItem('nuvio-tv-home-layout'),
-      AsyncStorage.getItem('nuvio-active-profile'),
+      AsyncStorage.getItem('streamovie-liquid-glass'),
+      AsyncStorage.getItem('streamovie-landscape-cards'),
+      AsyncStorage.getItem('streamovie-tv-home-layout'),
+      AsyncStorage.getItem('streamovie-active-profile'),
     ])
       .then(
         ([
@@ -633,7 +631,7 @@ export default function AppRoot() {
 
   useEffect(() => {
     if (preferencesLoaded) {
-      void AsyncStorage.setItem('nuvio-app-theme', theme);
+      void AsyncStorage.setItem('streamovie-app-theme', theme);
     }
   }, [preferencesLoaded, theme]);
   useEffect(() => {
@@ -648,22 +646,22 @@ export default function AppRoot() {
   }, [preferencesLoaded, showTop250Series]);
   useEffect(() => {
     if (preferencesLoaded) {
-      void AsyncStorage.setItem('nuvio-liquid-glass', String(liquidGlass));
+      void AsyncStorage.setItem('streamovie-liquid-glass', String(liquidGlass));
     }
   }, [preferencesLoaded, liquidGlass]);
   useEffect(() => {
     if (preferencesLoaded) {
-      void AsyncStorage.setItem('nuvio-landscape-cards', String(landscapeCards));
+      void AsyncStorage.setItem('streamovie-landscape-cards', String(landscapeCards));
     }
   }, [preferencesLoaded, landscapeCards]);
   useEffect(() => {
     if (preferencesLoaded) {
-      void AsyncStorage.setItem('nuvio-tv-home-layout', tvHomeLayout);
+      void AsyncStorage.setItem('streamovie-tv-home-layout', tvHomeLayout);
     }
   }, [preferencesLoaded, tvHomeLayout]);
   useEffect(() => {
     if (preferencesLoaded) {
-      void AsyncStorage.setItem('nuvio-active-profile', activeProfile);
+      void AsyncStorage.setItem('streamovie-active-profile', activeProfile);
     }
   }, [preferencesLoaded, activeProfile]);
 

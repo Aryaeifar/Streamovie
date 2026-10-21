@@ -188,7 +188,7 @@ function CarouselDot({active}: {active: boolean}) {
 }
 
 /**
- * NuvioTV Modern Home Hero Stage (Android TV 10-foot UI)
+ * Streamovie Modern Home Hero Stage (Android TV 10-foot UI)
  * Updates dynamically when the user focuses cards in any catalog row or cycles featured titles.
  */
 export function TVHeroStage({
@@ -234,7 +234,7 @@ export function TVHeroStage({
   );
   const synopsis =
     parsed.overview ||
-    'Stream instantly in high definition with Nuvio TV adaptive playback, multi-source selection, and synced library progress.';
+    'Stream instantly in high definition with Streamovie adaptive playback, multi-source selection, and synced library progress.';
 
   const layouts: {id: TVHomeLayout; label: string}[] = [
     {id: 'modern', label: 'Modern'},
@@ -262,13 +262,13 @@ export function TVHeroStage({
       <SmoothTopFade height={90} rgb="11, 15, 22" />
       <SmoothBottomFade height={220} rgb="14, 19, 27" />
 
-      {/* Top Bar: Nuvio TV Live Focus Indicator + Home Layout Switcher (Modern / Classic / Grid) */}
+      {/* Top Bar: Streamovie TV Live Focus Indicator + Home Layout Switcher (Modern / Classic / Grid) */}
       <View style={styles.tvHeroTopBar}>
         <View style={styles.tvHeroBrandCluster}>
           <View style={styles.tvHeroLiveBadge}>
             <View style={[styles.tvHeroLiveDot, {backgroundColor: accent}]} />
             <Text style={styles.tvHeroLiveText}>
-              NUVIO TV  •  {tvHomeLayout.toUpperCase()} VIEW
+              STREAMOVIE  •  {tvHomeLayout.toUpperCase()} VIEW
             </Text>
           </View>
         </View>
@@ -604,10 +604,10 @@ export function MediaRail({
   const [seeAllFocused, setSeeAllFocused] = useState(false);
   const useLandscape = continueWatching || landscape || landscapeCards;
 
-  // On mobile portrait rails: ~3 cards visible across screen (matching NuvioMobile)
-  // On TV portrait rails: ~5.5 cards visible across screen (matching NuvioTV 10-foot rows)
+  // On mobile portrait rails: ~3 cards visible across screen (matching Streamovie Mobile)
+  // On TV portrait rails: ~5.5 cards visible across screen (matching Streamovie TV 10-foot rows)
   const portraitWidth = isTV
-    ? Math.min(Math.max(Math.floor((width - 78 - 80 - 72) / 5.2), 178), 228)
+    ? Math.min(Math.max(Math.floor((width - 72 - 80 - 72) / 5.2), 178), 228)
     : width >= 620
     ? Math.floor((width - 32 - 36) / 4.3)
     : Math.floor((width - 32 - 20) / 3.05);
@@ -944,107 +944,157 @@ const cardExtraStyles = StyleSheet.create({
   },
 });
 
-const PROFILE_LABELS: Record<string, {name: string; initial: string}> = {
-  main: {name: 'Alex', initial: 'A'},
-  cinema: {name: 'Cinema', initial: 'C'},
-  night: {name: 'Night Owl', initial: 'N'},
-  kids: {name: 'Family', initial: 'F'},
-};
+function ClapperboardIcon({color = '#ffffff'}: {color?: string}) {
+  return (
+    <View
+      style={{
+        width: 19,
+        height: 17,
+        borderRadius: 3.5,
+        borderWidth: 1.8,
+        borderColor: color,
+        overflow: 'hidden',
+      }}>
+      <View
+        style={{
+          height: 5.5,
+          borderBottomWidth: 1.5,
+          borderBottomColor: color,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-evenly',
+        }}>
+        <View
+          style={{
+            width: 1.6,
+            height: 7,
+            backgroundColor: color,
+            transform: [{rotate: '-22deg'}],
+          }}
+        />
+        <View
+          style={{
+            width: 1.6,
+            height: 7,
+            backgroundColor: color,
+            transform: [{rotate: '-22deg'}],
+          }}
+        />
+      </View>
+    </View>
+  );
+}
 
 /**
- * NuvioTV Collapsible Navigation Drawer for Android TV
- * Collapses to 78px when browsing content; expands to 228px when any nav item receives D-pad focus.
+ * Streamovie TV Sidebar Navigation
+ * Matches the Web App sidebar design (src/components/layout/sidebar.tsx):
+ * Fixed 72px vertical icon rail with circular top brand button and centered rounded-xl nav icons.
+ * Settings and Profile items are removed on Android TV.
  */
 export function TVNavigation({
   selected,
-  settingsActive = false,
   onSelect,
-  onSettings,
   accent,
   showTop250Movies,
   showTop250Series,
 }: {
   selected: AppTab;
-  settingsActive?: boolean;
   onSelect: (tab: AppTab) => void;
-  onSettings: () => void;
   accent: string;
   locale: Locale;
   showTop250Movies: boolean;
   showTop250Series: boolean;
 }) {
-  const {activeProfile} = useContext(SettingsContext);
   const [focusedItemKey, setFocusedItemKey] = useState<string | null>(null);
-  const isExpanded = focusedItemKey !== null;
-  const profileMeta = PROFILE_LABELS[activeProfile] ?? PROFILE_LABELS.main;
 
   const items: {
     name: AppTab;
     icon: NavIconName;
     label: string;
+    matchTabs?: AppTab[];
   }[] = [
     {name: 'Home', icon: 'home', label: 'Home'},
-    {name: 'Search', icon: 'search', label: 'Search'},
+    {name: 'Trending', icon: 'trending', label: 'Trending'},
+    {name: 'Saved', icon: 'saved', label: 'Bookmarks'},
     {name: 'Movies', icon: 'movies', label: 'Movies'},
     {name: 'Series', icon: 'series', label: 'Series'},
-    {name: 'Saved', icon: 'saved', label: 'Library'},
-    ...(showTop250Movies
-      ? [{name: 'Top Movies' as const, icon: 'top' as const, label: 'Top 250 Movies'}]
-      : []),
-    ...(showTop250Series
-      ? [{name: 'Top Series' as const, icon: 'top' as const, label: 'Top 250 Series'}]
+    ...(showTop250Movies || showTop250Series
+      ? [
+          {
+            name: (showTop250Movies ? 'Top Movies' : 'Top Series') as AppTab,
+            icon: 'top' as const,
+            label: 'Top Rated',
+            matchTabs: ['Top Movies', 'Top Series'] as AppTab[],
+          },
+        ]
       : []),
   ];
 
-  const settingsFocused = focusedItemKey === '__settings__';
+  const brandFocused = focusedItemKey === '__brand__';
+  const searchFocused = focusedItemKey === 'Search';
+  const searchActive = selected === 'Search';
 
   return (
-    <View
-      accessibilityLabel="Sidebar navigation"
-      style={[
-        styles.tvNavigation,
-        isExpanded && styles.tvNavigationExpanded,
-      ]}>
-      {/* NuvioTV Brand Header */}
+    <View accessibilityLabel="Sidebar navigation" style={styles.tvNavigation}>
+      {/* Top Circular Streamovie Brand Button (matches web app Clapperboard link) */}
       <View style={styles.tvBrandHeader}>
-        <View style={[styles.tvBrandMark, {backgroundColor: accent}]}>
-          <Text style={{color: '#fff', fontSize: 19, fontWeight: '900'}}>N</Text>
-        </View>
-        {isExpanded ? (
-          <View style={{flex: 1}}>
-            <Text
-              numberOfLines={1}
-              style={{
-                color: '#ffffff',
-                fontSize: 17,
-                fontWeight: '800',
-                letterSpacing: -0.3,
-              }}>
-              Nuvio TV
-            </Text>
-            <Text
-              numberOfLines={1}
-              style={{
-                color: '#7d8597',
-                fontSize: 10.5,
-                fontWeight: '700',
-                letterSpacing: 0.4,
-              }}>
-              STREAMOVIE
-            </Text>
-          </View>
-        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Streamovie"
+          onPress={() => onSelect('Home')}
+          onFocus={() => setFocusedItemKey('__brand__')}
+          onBlur={() =>
+            setFocusedItemKey(prev => (prev === '__brand__' ? null : prev))
+          }
+          style={[
+            styles.tvBrandMark,
+            brandFocused && {
+              borderColor: `${accent}88`,
+              backgroundColor: 'rgba(255, 255, 255, 0.14)',
+              transform: [{scale: 1.05}],
+            },
+          ]}>
+          <ClapperboardIcon color={brandFocused ? accent : '#ffffff'} />
+        </Pressable>
       </View>
 
-      {/* Navigation Items */}
+      {/* Centered Icon Rail (Search + Navigation Items, matching web app sidebar.tsx) */}
       <View style={styles.tvNavigationItems}>
+        <Pressable
+          accessibilityRole="tab"
+          accessibilityLabel="Search"
+          accessibilityState={{selected: searchActive}}
+          onPress={() => onSelect('Search')}
+          onFocus={() => setFocusedItemKey('Search')}
+          onBlur={() =>
+            setFocusedItemKey(prev => (prev === 'Search' ? null : prev))
+          }
+          style={[
+            styles.tvNavigationItem,
+            {marginBottom: 4},
+            searchActive && styles.tvNavigationSelected,
+            searchFocused && [styles.tvNavigationFocused, {borderColor: accent}],
+          ]}>
+          {searchActive ? (
+            <View style={[styles.tvNavActiveBar, {backgroundColor: accent}]} />
+          ) : null}
+          <NavIcon
+            name="search"
+            color={searchActive || searchFocused ? '#ffffff' : '#8b8ba0'}
+            size={20}
+          />
+        </Pressable>
+
         {items.map(item => {
-          const isSelected = !settingsActive && selected === item.name;
+          const isSelected = item.matchTabs
+            ? item.matchTabs.includes(selected)
+            : selected === item.name;
           const isFocused = focusedItemKey === item.name;
           return (
             <Pressable
               key={item.name}
               accessibilityRole="tab"
+              accessibilityLabel={item.label}
               accessibilityState={{selected: isSelected}}
               onPress={() => onSelect(item.name)}
               onFocus={() => setFocusedItemKey(item.name)}
@@ -1053,7 +1103,6 @@ export function TVNavigation({
               }
               style={[
                 styles.tvNavigationItem,
-                isExpanded && styles.tvNavigationItemExpanded,
                 isSelected && styles.tvNavigationSelected,
                 isFocused && [styles.tvNavigationFocused, {borderColor: accent}],
               ]}>
@@ -1064,69 +1113,13 @@ export function TVNavigation({
               ) : null}
               <NavIcon
                 name={item.icon}
-                color={isSelected || isFocused ? '#ffffff' : '#8b949e'}
+                color={isSelected || isFocused ? '#ffffff' : '#8b8ba0'}
                 size={20}
               />
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.tvNavigationLabel,
-                  isExpanded && styles.tvNavigationLabelExpanded,
-                  (isSelected || isFocused) && styles.tvNavigationTextActive,
-                ]}>
-                {isExpanded
-                  ? item.label
-                  : item.label.replace(' Movies', '').replace(' Series', ' TV')}
-              </Text>
             </Pressable>
           );
         })}
       </View>
-
-      {/* Bottom Profile & Settings Switcher */}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Profile & Settings"
-        onPress={onSettings}
-        onFocus={() => setFocusedItemKey('__settings__')}
-        onBlur={() =>
-          setFocusedItemKey(prev => (prev === '__settings__' ? null : prev))
-        }
-        style={[
-          styles.tvNavigationItem,
-          isExpanded && styles.tvNavigationItemExpanded,
-          settingsActive && styles.tvNavigationSelected,
-          settingsFocused && [
-            styles.tvNavigationFocused,
-            {borderColor: accent},
-          ],
-        ]}>
-        {settingsActive ? (
-          <View style={[styles.tvNavActiveBar, {backgroundColor: accent}]} />
-        ) : null}
-        <View
-          style={{
-            width: 24,
-            height: 24,
-            borderRadius: 12,
-            backgroundColor: accent,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Text style={{color: '#090b10', fontSize: 11, fontWeight: '900'}}>
-            {profileMeta.initial}
-          </Text>
-        </View>
-        <Text
-          numberOfLines={1}
-          style={[
-            styles.tvNavigationLabel,
-            isExpanded && styles.tvNavigationLabelExpanded,
-            (settingsActive || settingsFocused) && styles.tvNavigationTextActive,
-          ]}>
-          {isExpanded ? `${profileMeta.name} • Settings` : 'Profile'}
-        </Text>
-      </Pressable>
     </View>
   );
 }
@@ -1194,66 +1187,103 @@ export function AppHeader({
   );
 }
 
+function formatDisneyEpisodeTitle(
+  rawTitle: string,
+  episodeIndex: number,
+  durationText: string,
+): string {
+  const cleaned = rawTitle
+    .replace(/^(?:episode|ep|e|قسمت)\s*\d+\s*[:.\-–—]?\s*/i, '')
+    .replace(/^\d+\s*[.:\-–—]\s*/, '')
+    .trim();
+  const titlePart = cleaned || `Episode ${episodeIndex + 1}`;
+  const durMatch = durationText.match(/(\d+)\s*(?:m|min|دقیقه)/i);
+  const dur = durMatch
+    ? `${durMatch[1]}m`
+    : /^\d+$/.test(durationText.trim())
+    ? `${durationText.trim()}m`
+    : durationText.trim() || '22m';
+  return `${episodeIndex + 1}. ${titlePart} (${dur})`;
+}
+
+function formatDisneySeasonLabel(rawTitle: string, index: number): string {
+  const stripped = rawTitle.replace(/\s*\(\d+\)\s*$/, '').trim();
+  if (!stripped || /^\d+$/.test(stripped) || /فصل/.test(stripped)) {
+    return `Season ${index + 1}`;
+  }
+  if (/^season\s*\d+/i.test(stripped)) {
+    return stripped.replace(/^season\s*/i, 'Season ');
+  }
+  return stripped;
+}
+
 function TVEpisodeCard({
   episode,
-  epCode,
-  accent,
+  episodeIndex,
+  fallbackImage,
+  fallbackDuration,
+  fallbackOverview,
   onSelectEpisode,
 }: {
   episode: Episode;
-  epCode: string;
-  accent: string;
+  episodeIndex: number;
+  fallbackImage: string;
+  fallbackDuration: string;
+  fallbackOverview: string;
   onSelectEpisode: () => void;
 }) {
   const [focused, setFocused] = useState(false);
+  const thumbnailUri = episode.image || fallbackImage;
+  const formattedTitle = formatDisneyEpisodeTitle(
+    episode.title,
+    episodeIndex,
+    episode.duration || fallbackDuration,
+  );
+  const epDescription =
+    episode.description ||
+    fallbackOverview ||
+    'Stream this episode in high definition on Streamovie.';
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${epCode} ${episode.title}`}
+      accessibilityLabel={formattedTitle}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       onPress={onSelectEpisode}
       style={[
-        tvDetailStyles.episodeCard,
-        focused && {
-          borderColor: accent,
-          backgroundColor: 'rgba(88, 166, 255, 0.14)',
-          transform: [{scale: 1.015}],
-        },
+        tvDetailStyles.disneyEpisodeCard,
+        focused && tvDetailStyles.disneyEpisodeCardFocused,
       ]}>
-      <View style={tvDetailStyles.episodeBadgeBox}>
-        <Text style={[tvDetailStyles.episodeBadgeCode, {color: accent}]}>
-          {epCode}
-        </Text>
-        <View style={tvDetailStyles.episodePlayCircle}>
-          <Text style={{color: '#090b10', fontSize: 11, fontWeight: '900'}}>
-            ▶
-          </Text>
-        </View>
-      </View>
-      <View style={{flex: 1, gap: 4}}>
-        <Text numberOfLines={1} style={tvDetailStyles.episodeTitleText}>
-          {episode.title}
-        </Text>
-        <Text style={tvDetailStyles.episodeSubText}>
-          {episode.sources.length > 0
-            ? `${episode.sources.length} stream sources available  •  Click to select stream`
-            : 'No streams available yet'}
-        </Text>
-      </View>
       <View
         style={[
-          tvDetailStyles.episodeStreamCountPill,
-          focused && {backgroundColor: '#ffffff'},
+          tvDetailStyles.disneyEpisodeThumbFrame,
+          focused && tvDetailStyles.disneyEpisodeThumbFrameFocused,
         ]}>
-        <Text
-          style={[
-            tvDetailStyles.episodeStreamCountText,
-            focused && {color: '#090b10'},
-          ]}>
-          {episode.sources.length} Streams ›
-        </Text>
+        {thumbnailUri ? (
+          <Image
+            source={{uri: thumbnailUri}}
+            resizeMode="cover"
+            style={tvDetailStyles.disneyEpisodeThumb}
+          />
+        ) : (
+          <View
+            style={[
+              tvDetailStyles.disneyEpisodeThumb,
+              styles.posterPlaceholder,
+            ]}>
+            <Text style={styles.body}>Episode {episodeIndex + 1}</Text>
+          </View>
+        )}
       </View>
+
+      <Text numberOfLines={1} style={tvDetailStyles.disneyEpisodeTitle}>
+        {formattedTitle}
+      </Text>
+
+      <Text numberOfLines={3} style={tvDetailStyles.disneyEpisodeDesc}>
+        {epDescription}
+      </Text>
     </Pressable>
   );
 }
@@ -1299,6 +1329,11 @@ export function Detail({
   const [backFocused, setBackFocused] = useState(false);
   const [playFocused, setPlayFocused] = useState(false);
   const [saveFocused, setSaveFocused] = useState(false);
+  const [tvDetailTab, setTvDetailTab] = useState<
+    'episodes' | 'suggested' | 'details'
+  >('episodes');
+  const [focusedDetailTab, setFocusedDetailTab] = useState<string | null>(null);
+  const [focusedSeasonIdx, setFocusedSeasonIdx] = useState<number | null>(null);
 
   const openMovieStreams = () => {
     setStreamSheetTarget({
@@ -1328,7 +1363,7 @@ export function Detail({
     item.rating ? `★ ${item.rating}` : '',
   ].filter(Boolean);
 
-  // Android TV 10-Foot NuvioTV MetaDetailsScreen & StreamScreen UI
+  // Android TV 10-Foot Streamovie Detail & Disney+ Style Episode List UI
   if (isTV) {
     const cleanFields = description.fields.filter(
       field => field.label !== 'Persian title',
@@ -1338,33 +1373,48 @@ export function Detail({
       .map(g => g.trim())
       .filter(Boolean)
       .slice(0, 4);
+    const itemDuration = asText(item.raw.duration, item.raw.runtime);
+    const seriesSynopsis =
+      description.overview ||
+      item.overview ||
+      'Stream all episodes in high definition on Streamovie.';
+
+    const disneyTabs: {
+      id: 'episodes' | 'suggested' | 'details';
+      label: string;
+    }[] = [
+      {id: 'episodes', label: 'EPISODES'},
+      {id: 'suggested', label: 'SUGGESTED'},
+      {id: 'details', label: 'DETAILS'},
+    ];
 
     return (
-      <View style={[styles.detail, {backgroundColor: palette.tvBg ?? palette.bg}]}>
-        {/* Full-bleed NuvioTV MetaDetails Hero */}
-        <View
-          style={[
-            tvDetailStyles.heroContainer,
-            {backgroundColor: palette.tvBg ?? palette.bg},
-          ]}>
-          {item.backdrop || item.image ? (
-            <Image
-              source={{uri: item.backdrop || item.image}}
-              resizeMode="cover"
-              style={styles.detailBackdrop}
-            />
-          ) : null}
-          <View
-            pointerEvents="none"
-            style={{
-              ...StyleSheet.absoluteFillObject,
-              backgroundColor: 'rgba(10, 14, 21, 0.56)',
-            }}
+      <View
+        style={[
+          styles.detail,
+          tvDetailStyles.disneyScreenRoot,
+          {backgroundColor: palette.tvBg ?? '#0e111a'},
+        ]}>
+        {/* Full-bleed Backdrop across the Detail & Episode Stage (Disney+ layout) */}
+        {item.backdrop || item.image ? (
+          <Image
+            source={{uri: item.backdrop || item.image}}
+            resizeMode="cover"
+            style={styles.detailBackdrop}
           />
-          <SmoothLeftVignette width={820} rgb="11, 15, 22" />
-          <SmoothTopFade height={96} rgb="11, 15, 22" />
-          <SmoothBottomFade height={220} rgb="14, 19, 27" />
+        ) : null}
+        <View
+          pointerEvents="none"
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: 'rgba(13, 16, 25, 0.76)',
+          }}
+        />
+        <SmoothLeftVignette width={860} rgb="13, 16, 25" />
+        <SmoothTopFade height={96} rgb="13, 16, 25" />
+        <SmoothBottomFade height={260} rgb="13, 16, 25" />
 
+        <View style={tvDetailStyles.disneyStageContent}>
           {/* Top Navigation Bar on Detail Screen */}
           <View style={tvDetailStyles.topNavRow}>
             {onBack ? (
@@ -1400,220 +1450,285 @@ export function Detail({
             </View>
           </View>
 
-          {/* Main 10-Foot Poster + Metadata Content Row */}
-          <View style={tvDetailStyles.heroMainRow}>
-            {item.image ? (
-              <Image
-                source={{uri: item.image}}
-                resizeMode="cover"
-                style={tvDetailStyles.posterLarge}
-              />
-            ) : null}
+          {/* Hero Header + Actions + Synopsis */}
+          <View style={tvDetailStyles.disneyHeroBlock}>
+            <Text style={tvDetailStyles.titleLarge}>{item.title}</Text>
 
-            <View style={tvDetailStyles.metaStage}>
-              <Text style={tvDetailStyles.titleLarge}>{item.title}</Text>
-
-              <View style={tvDetailStyles.chipsRow}>
+            <View style={tvDetailStyles.chipsRow}>
+              <View style={styles.tvHeroMetaPill}>
+                <Text style={styles.tvHeroMetaPillText}>
+                  {item.year || '2026'}
+                </Text>
+              </View>
+              {itemDuration ? (
+                <View style={styles.tvHeroMetaPill}>
+                  <Text style={styles.tvHeroMetaPillText}>{itemDuration}</Text>
+                </View>
+              ) : null}
+              {asText(item.raw.country, item.raw.countries) ? (
                 <View style={styles.tvHeroMetaPill}>
                   <Text style={styles.tvHeroMetaPillText}>
-                    {item.year || '2026'}
+                    {asText(item.raw.country, item.raw.countries)}
                   </Text>
                 </View>
-                {asText(item.raw.duration, item.raw.runtime) ? (
-                  <View style={styles.tvHeroMetaPill}>
-                    <Text style={styles.tvHeroMetaPillText}>
-                      {asText(item.raw.duration, item.raw.runtime)}
-                    </Text>
-                  </View>
-                ) : null}
-                {asText(item.raw.country, item.raw.countries) ? (
-                  <View style={styles.tvHeroMetaPill}>
-                    <Text style={styles.tvHeroMetaPillText}>
-                      {asText(item.raw.country, item.raw.countries)}
-                    </Text>
-                  </View>
-                ) : null}
-                {genresList.map(genre => (
-                  <View key={genre} style={styles.tvHeroMetaPill}>
-                    <Text style={styles.tvHeroMetaPillText}>{genre}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {description.overview ? (
-                <Text numberOfLines={4} style={tvDetailStyles.overviewText}>
-                  {description.overview}
-                </Text>
               ) : null}
-
-              {cleanFields.length > 0 ? (
-                <View style={tvDetailStyles.creditsStrip}>
-                  {cleanFields.slice(0, 3).map((field, idx) => (
-                    <View
-                      key={`${field.label}-${idx}`}
-                      style={tvDetailStyles.creditBox}>
-                      <Text style={tvDetailStyles.creditLabel}>
-                        {field.label}
-                      </Text>
-                      <Text
-                        numberOfLines={1}
-                        style={tvDetailStyles.creditValue}>
-                        {field.value}
-                      </Text>
-                    </View>
-                  ))}
+              {genresList.map(genre => (
+                <View key={genre} style={styles.tvHeroMetaPill}>
+                  <Text style={styles.tvHeroMetaPillText}>{genre}</Text>
                 </View>
-              ) : null}
+              ))}
+            </View>
 
-              <View style={tvDetailStyles.actionsRow}>
-                {item.kind === 'movie' ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    onFocus={() => setPlayFocused(true)}
-                    onBlur={() => setPlayFocused(false)}
-                    onPress={openMovieStreams}
-                    style={[
-                      styles.tvHeroPrimaryBtn,
-                      playFocused && {
-                        borderColor: accent,
-                        transform: [{scale: 1.04}],
-                      },
-                    ]}>
-                    <Text style={styles.tvHeroPrimaryBtnText}>
-                      ▶  Play / Select Stream ({mediaSources.length})
-                    </Text>
-                  </Pressable>
-                ) : currentSeason?.episodes?.[0] ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    onFocus={() => setPlayFocused(true)}
-                    onBlur={() => setPlayFocused(false)}
-                    onPress={() =>
-                      openEpisodeStreams(currentSeason.episodes[0], 0)
-                    }
-                    style={[
-                      styles.tvHeroPrimaryBtn,
-                      playFocused && {
-                        borderColor: accent,
-                        transform: [{scale: 1.04}],
-                      },
-                    ]}>
-                    <Text style={styles.tvHeroPrimaryBtnText}>
-                      ▶  Play S{seasonIndex + 1}:E1
-                    </Text>
-                  </Pressable>
-                ) : null}
-
+            <View style={tvDetailStyles.actionsRow}>
+              {item.kind === 'movie' ? (
                 <Pressable
                   accessibilityRole="button"
-                  onFocus={() => setSaveFocused(true)}
-                  onBlur={() => setSaveFocused(false)}
-                  onPress={onSave}
+                  onFocus={() => setPlayFocused(true)}
+                  onBlur={() => setPlayFocused(false)}
+                  onPress={openMovieStreams}
                   style={[
-                    styles.tvHeroSecondaryBtn,
-                    isSaved && {
-                      borderColor: `${accent}88`,
-                      backgroundColor: `${accent}24`,
-                    },
-                    saveFocused && {
+                    styles.tvHeroPrimaryBtn,
+                    playFocused && {
                       borderColor: accent,
                       transform: [{scale: 1.04}],
                     },
                   ]}>
-                  <Text style={styles.tvHeroSecondaryBtnText}>
-                    {isSaved ? '✓  Saved in Library' : '+  Add to Library'}
+                  <Text style={styles.tvHeroPrimaryBtnText}>
+                    ▶  Play / Select Stream ({mediaSources.length})
                   </Text>
                 </Pressable>
-              </View>
+              ) : currentSeason?.episodes?.[0] ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onFocus={() => setPlayFocused(true)}
+                  onBlur={() => setPlayFocused(false)}
+                  onPress={() =>
+                    openEpisodeStreams(currentSeason.episodes[0], 0)
+                  }
+                  style={[
+                    styles.tvHeroPrimaryBtn,
+                    playFocused && {
+                      borderColor: accent,
+                      transform: [{scale: 1.04}],
+                    },
+                  ]}>
+                  <Text style={styles.tvHeroPrimaryBtnText}>
+                    ▶  Play S{seasonIndex + 1}:E1
+                  </Text>
+                </Pressable>
+              ) : null}
+
+              <Pressable
+                accessibilityRole="button"
+                onFocus={() => setSaveFocused(true)}
+                onBlur={() => setSaveFocused(false)}
+                onPress={onSave}
+                style={[
+                  styles.tvHeroSecondaryBtn,
+                  isSaved && {
+                    borderColor: `${accent}88`,
+                    backgroundColor: `${accent}24`,
+                  },
+                  saveFocused && {
+                    borderColor: accent,
+                    transform: [{scale: 1.04}],
+                  },
+                ]}>
+                <Text style={styles.tvHeroSecondaryBtnText}>
+                  {isSaved ? '✓  Saved in Library' : '+  Add to Library'}
+                </Text>
+              </Pressable>
             </View>
+
+            <Text numberOfLines={3} style={tvDetailStyles.disneyHeroSynopsis}>
+              {seriesSynopsis}
+            </Text>
           </View>
+
+          {/* Streams or Disney+ Style Episodes Section on TV */}
+          {item.kind === 'movie' ? (
+            <View
+              style={[
+                styles.section,
+                {marginHorizontal: 0, marginTop: 28, backgroundColor: palette.panel},
+              ]}>
+              <View style={styles.detailSectionHeading}>
+                <View>
+                  <Text style={[styles.panelHeading, {fontSize: 20, marginBottom: 4}]}>
+                    Available Streams ({mediaSources.length})
+                  </Text>
+                  <Text style={styles.railSubtitleTV}>
+                    Select a stream quality to launch the Streamovie player or external download
+                  </Text>
+                </View>
+              </View>
+              <SourceGrid
+                sources={mediaSources}
+                columns={sourceColumns}
+                title={item.title}
+                onWatch={onWatch}
+              />
+            </View>
+          ) : (
+            <View style={tvDetailStyles.disneyEpisodesSection}>
+              {/* Disney+ Tab Bar: EPISODES | SUGGESTED | DETAILS with full-width bottom divider */}
+              <View style={tvDetailStyles.disneyTabsBar}>
+                {disneyTabs.map(tabObj => {
+                  const active = tvDetailTab === tabObj.id;
+                  const focused = focusedDetailTab === tabObj.id;
+                  return (
+                    <Pressable
+                      key={tabObj.id}
+                      accessibilityRole="tab"
+                      accessibilityState={{selected: active}}
+                      onFocus={() => setFocusedDetailTab(tabObj.id)}
+                      onBlur={() =>
+                        setFocusedDetailTab(prev =>
+                          prev === tabObj.id ? null : prev,
+                        )
+                      }
+                      onPress={() => setTvDetailTab(tabObj.id)}
+                      style={tvDetailStyles.disneyTabButton}>
+                      <Text
+                        style={[
+                          tvDetailStyles.disneyTabText,
+                          (active || focused) &&
+                            tvDetailStyles.disneyTabTextActive,
+                        ]}>
+                        {tabObj.label}
+                      </Text>
+                      {active || focused ? (
+                        <View
+                          style={[
+                            tvDetailStyles.disneyTabUnderline,
+                            focused && !active && {backgroundColor: accent},
+                          ]}
+                        />
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {tvDetailTab === 'episodes' ? (
+                !seasons.length ? (
+                  <Text style={styles.body}>
+                    Loading episodes, or no episodes are available yet.
+                  </Text>
+                ) : (
+                  <>
+                    {/* Disney+ Season Selector Row: Season 1   Season 2   Season 3 ... */}
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={tvDetailStyles.disneySeasonsRow}>
+                      {seasons.map((season, index) => {
+                        const active = seasonIndex === index;
+                        const focused = focusedSeasonIdx === index;
+                        return (
+                          <Pressable
+                            key={`${season.title}-${index}`}
+                            accessibilityRole="tab"
+                            accessibilityState={{selected: active}}
+                            onFocus={() => setFocusedSeasonIdx(index)}
+                            onBlur={() =>
+                              setFocusedSeasonIdx(prev =>
+                                prev === index ? null : prev,
+                              )
+                            }
+                            onPress={() => onSeason(index)}
+                            style={tvDetailStyles.disneySeasonItem}>
+                            <Text
+                              style={[
+                                tvDetailStyles.disneySeasonText,
+                                (active || focused) &&
+                                  tvDetailStyles.disneySeasonTextActive,
+                              ]}>
+                              {formatDisneySeasonLabel(season.title, index)}
+                            </Text>
+                            {focused ? (
+                              <View
+                                style={[
+                                  tvDetailStyles.disneySeasonFocusLine,
+                                  {backgroundColor: accent},
+                                ]}
+                              />
+                            ) : null}
+                          </Pressable>
+                        );
+                      })}
+                    </ScrollView>
+
+                    {/* Disney+ Horizontal 16:9 Episode Cards Rail */}
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={
+                        tvDetailStyles.disneyEpisodesHorizontalRow
+                      }>
+                      {seasons[seasonIndex]?.episodes.map((episode, index) => (
+                        <TVEpisodeCard
+                          key={`${episode.title}-${index}`}
+                          episode={episode}
+                          episodeIndex={index}
+                          fallbackImage={item.backdrop || item.image}
+                          fallbackDuration={itemDuration}
+                          fallbackOverview={seriesSynopsis}
+                          onSelectEpisode={() =>
+                            openEpisodeStreams(episode, index)
+                          }
+                        />
+                      ))}
+                    </ScrollView>
+                  </>
+                )
+              ) : tvDetailTab === 'suggested' ? (
+                <View style={tvDetailStyles.disneyDetailsPane}>
+                  <Text style={tvDetailStyles.disneyDetailsHeading}>
+                    More Like {item.title}
+                  </Text>
+                  <Text style={tvDetailStyles.disneyDetailsBody}>
+                    {seriesSynopsis}
+                  </Text>
+                  <View style={tvDetailStyles.chipsRow}>
+                    {genresList.map(genre => (
+                      <View key={genre} style={styles.tvHeroMetaPill}>
+                        <Text style={styles.tvHeroMetaPillText}>{genre}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <View style={tvDetailStyles.disneyDetailsPane}>
+                  <Text style={tvDetailStyles.disneyDetailsHeading}>
+                    {item.title}
+                  </Text>
+                  <Text style={tvDetailStyles.disneyDetailsBody}>
+                    {seriesSynopsis}
+                  </Text>
+                  {cleanFields.length > 0 ? (
+                    <View style={tvDetailStyles.creditsStrip}>
+                      {cleanFields.map((field, idx) => (
+                        <View
+                          key={`${field.label}-${idx}`}
+                          style={tvDetailStyles.creditBox}>
+                          <Text style={tvDetailStyles.creditLabel}>
+                            {field.label}
+                          </Text>
+                          <Text style={tvDetailStyles.creditValue}>
+                            {field.value}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
-        {/* Streams or Episodes Section on TV */}
-        {item.kind === 'movie' ? (
-          <View
-            style={[
-              styles.section,
-              styles.sectionTV,
-              {backgroundColor: palette.panel},
-            ]}>
-            <View style={styles.detailSectionHeading}>
-              <View>
-                <Text style={[styles.panelHeading, {fontSize: 20, marginBottom: 4}]}>
-                  Available Streams ({mediaSources.length})
-                </Text>
-                <Text style={styles.railSubtitleTV}>
-                  Select a stream quality to launch the Nuvio TV player or external download
-                </Text>
-              </View>
-            </View>
-            <SourceGrid
-              sources={mediaSources}
-              columns={sourceColumns}
-              title={item.title}
-              onWatch={onWatch}
-            />
-          </View>
-        ) : (
-          <View
-            style={[
-              styles.section,
-              styles.sectionTV,
-              {backgroundColor: palette.panel},
-            ]}>
-            <View style={styles.detailSectionHeading}>
-              <View>
-                <Text style={[styles.panelHeading, {fontSize: 20, marginBottom: 4}]}>
-                  Seasons & Episodes
-                </Text>
-                <Text style={styles.railSubtitleTV}>
-                  Choose a season tab and select an episode to view available streams
-                </Text>
-              </View>
-            </View>
-
-            {!seasons.length ? (
-              <Text style={styles.body}>
-                Loading episodes, or no episodes are available yet.
-              </Text>
-            ) : (
-              <>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.seasonRow}>
-                  {seasons.map((season, index) => (
-                    <Action
-                      key={`${season.title}-${index}`}
-                      label={`${season.title} (${season.episodes.length})`}
-                      active={seasonIndex === index}
-                      onPress={() => onSeason(index)}
-                    />
-                  ))}
-                </ScrollView>
-
-                <View style={tvDetailStyles.episodesList}>
-                  {seasons[seasonIndex]?.episodes.map((episode, index) => {
-                    const epCode = `S${seasonIndex + 1} · E${index + 1}`;
-                    return (
-                      <TVEpisodeCard
-                        key={`${episode.title}-${index}`}
-                        episode={episode}
-                        epCode={epCode}
-                        accent={accent}
-                        onSelectEpisode={() =>
-                          openEpisodeStreams(episode, index)
-                        }
-                      />
-                    );
-                  })}
-                </View>
-              </>
-            )}
-          </View>
-        )}
-
-        {/* NuvioTV Stream Selector Modal */}
+        {/* Streamovie TV Stream Selector Modal */}
         <Modal
           visible={!!streamSheetTarget}
           transparent
@@ -2045,60 +2160,147 @@ const tvDetailStyles = StyleSheet.create({
     gap: 12,
     marginTop: 8,
   },
-  episodesList: {
-    gap: 10,
-    marginTop: 10,
+  disneyScreenRoot: {
+    position: 'relative',
+    minHeight: 720,
+    overflow: 'hidden',
   },
-  episodeCard: {
+  disneyStageContent: {
+    position: 'relative',
+    zIndex: 5,
+    paddingHorizontal: 48,
+    paddingTop: 26,
+    paddingBottom: 48,
+  },
+  disneyHeroBlock: {
+    maxWidth: 780,
+    gap: 10,
+    marginTop: 8,
+  },
+  disneyHeroSynopsis: {
+    color: '#f9f9f9',
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '400',
+    marginTop: 14,
+    maxWidth: 740,
+  },
+  disneyEpisodesSection: {
+    marginTop: 38,
+  },
+  disneyTabsBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.09)',
+    gap: 40,
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'rgba(255, 255, 255, 0.22)',
+    paddingBottom: 13,
   },
-  episodeBadgeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    minWidth: 96,
+  disneyTabButton: {
+    position: 'relative',
+    paddingVertical: 2,
   },
-  episodeBadgeCode: {
-    fontSize: 12.5,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-  },
-  episodePlayCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  episodeTitleText: {
-    color: '#ffffff',
-    fontSize: 15.5,
+  disneyTabText: {
+    color: 'rgba(249, 249, 249, 0.60)',
+    fontSize: 18,
     fontWeight: '700',
+    letterSpacing: 2.2,
   },
-  episodeSubText: {
-    color: '#8b949e',
-    fontSize: 12,
+  disneyTabTextActive: {
+    color: '#ffffff',
+  },
+  disneyTabUnderline: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -15,
+    height: 3.5,
+    borderRadius: 2,
+    backgroundColor: '#ffffff',
+  },
+  disneySeasonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 32,
+    paddingTop: 20,
+    paddingBottom: 22,
+  },
+  disneySeasonItem: {
+    position: 'relative',
+    paddingVertical: 4,
+  },
+  disneySeasonText: {
+    color: 'rgba(249, 249, 249, 0.58)',
+    fontSize: 15.5,
     fontWeight: '500',
   },
-  episodeStreamCountPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  episodeStreamCountText: {
-    color: '#e6edf3',
-    fontSize: 12,
+  disneySeasonTextActive: {
+    color: '#ffffff',
     fontWeight: '700',
+  },
+  disneySeasonFocusLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -2,
+    height: 2,
+    borderRadius: 1,
+  },
+  disneyEpisodesHorizontalRow: {
+    gap: 20,
+    paddingRight: 48,
+    paddingBottom: 12,
+  },
+  disneyEpisodeCard: {
+    width: 268,
+  },
+  disneyEpisodeCardFocused: {
+    transform: [{scale: 1.03}],
+  },
+  disneyEpisodeThumbFrame: {
+    width: 268,
+    height: 151,
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: '#1a1d29',
+    borderWidth: 2.5,
+    borderColor: 'transparent',
+  },
+  disneyEpisodeThumbFrameFocused: {
+    borderColor: '#f9f9f9',
+  },
+  disneyEpisodeThumb: {
+    width: '100%',
+    height: '100%',
+  },
+  disneyEpisodeTitle: {
+    color: '#f9f9f9',
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 20,
+    marginTop: 12,
+  },
+  disneyEpisodeDesc: {
+    color: 'rgba(249, 249, 249, 0.70)',
+    fontSize: 13,
+    lineHeight: 18.5,
+    fontWeight: '400',
+    marginTop: 6,
+  },
+  disneyDetailsPane: {
+    paddingTop: 24,
+    gap: 12,
+    maxWidth: 780,
+  },
+  disneyDetailsHeading: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  disneyDetailsBody: {
+    color: 'rgba(249, 249, 249, 0.80)',
+    fontSize: 15,
+    lineHeight: 23,
   },
 });
 
@@ -2228,7 +2430,7 @@ export function SiteFooter({onNavigate}: {onNavigate: (tab: AppTab) => void}) {
     <View style={styles.siteFooter}>
       <View style={styles.footerBrand}>
         <View style={[styles.footerMark, {backgroundColor: accent}]}>
-          <Text style={styles.footerMarkText}>N</Text>
+          <Text style={styles.footerMarkText}>S</Text>
         </View>
         <Text style={styles.footerBrandText}>Streamovie</Text>
       </View>

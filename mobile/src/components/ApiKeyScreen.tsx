@@ -27,7 +27,7 @@ export function ApiKeyScreen({
         <View style={[styles.keyCard, {backgroundColor: palette.panel}]}>
           <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
             <View style={[styles.brandMark, {backgroundColor: palette.accent}]}>
-              <Text style={styles.brandMarkText}>N</Text>
+              <Text style={styles.brandMarkText}>S</Text>
             </View>
             <View>
               <Text style={styles.brand}>Streamovie</Text>

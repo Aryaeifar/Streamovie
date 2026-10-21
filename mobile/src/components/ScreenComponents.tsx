@@ -71,7 +71,7 @@ export function HomeScreen({
 
   const activeHeroItem = focusedHeroItem ?? items[0] ?? null;
 
-  // Android TV: NuvioTV 10-Foot Experience (Modern / Classic / Grid Home Layouts)
+  // Android TV: Streamovie 10-Foot Experience (Modern / Classic / Grid Home Layouts)
   if (isTV) {
     if (tvHomeLayout === 'grid') {
       const gridData =
@@ -189,7 +189,7 @@ export function HomeScreen({
         contentContainerStyle={[styles.homeContent, styles.homeContentTV]}>
         {header}
 
-        {/* NuvioTV Hero Stage: Modern (Focus-Synced Full-Bleed Backdrop) or Classic (Carousel) */}
+        {/* Streamovie TV Hero Stage: Modern (Focus-Synced Full-Bleed Backdrop) or Classic (Carousel) */}
         {tvHomeLayout === 'classic' ? (
           <View>
             <View style={tvHomeExtraStyles.classicTopBar}>
@@ -198,7 +198,7 @@ export function HomeScreen({
                   style={[styles.tvHeroLiveDot, {backgroundColor: accent}]}
                 />
                 <Text style={styles.tvHeroLiveText}>
-                  NUVIO TV  •  CLASSIC VIEW
+                  STREAMOVIE  •  CLASSIC VIEW
                 </Text>
               </View>
               <View style={styles.tvLayoutSwitcher}>
@@ -251,7 +251,7 @@ export function HomeScreen({
 
         {error ? <ErrorMessage message={error} /> : null}
 
-        {/* NuvioTV Continue Watching Row (Landscape 16:9 Backdrops with Time Badge & Progress Bar) */}
+        {/* Streamovie Continue Watching Row (Landscape 16:9 Backdrops with Time Badge & Progress Bar) */}
         {continueItems.length > 0 ? (
           <MediaRail
             title="Continue Watching"
@@ -366,7 +366,7 @@ export function HomeScreen({
     );
   }
 
-  // Mobile & Tablet NuvioMobile Home Layout (Unchanged)
+  // Mobile & Tablet Streamovie Home Layout
   return (
     <ScrollView
       ref={scrollRef}

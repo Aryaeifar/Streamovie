@@ -46,7 +46,7 @@ export function AppHeader({
     );
   }
 
-  // On Home screen (without active search), NuvioMobile & NuvioTV keep the top completely clean
+  // On Home screen (without active search), Streamovie keeps the top completely clean
   if (tab === 'Home' && !searchDraft.trim()) {
     return null;
   }

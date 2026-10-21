@@ -25,7 +25,7 @@ export type AppSettings = {
 };
 
 export const SettingsContextDefault: AppSettings = {
-  theme: 'nuvio',
+  theme: 'streamovie',
   locale: 'en',
   isPersian: false,
   showTop250Movies: true,

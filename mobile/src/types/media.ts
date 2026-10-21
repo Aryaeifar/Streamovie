@@ -12,7 +12,13 @@ export type TVHomeLayout = 'modern' | 'classic' | 'grid';
 export type ProfileId = 'main' | 'cinema' | 'night' | 'kids';
 export type Source = {quality: string; url: string};
 export type Genre = {id: number; title: string};
-export type Episode = {title: string; sources: Source[]};
+export type Episode = {
+  title: string;
+  sources: Source[];
+  description?: string;
+  duration?: string;
+  image?: string;
+};
 export type Season = {title: string; episodes: Episode[]};
 export type Media = {
   id: number;
@@ -27,7 +33,7 @@ export type Media = {
 };
 export type Locale = 'en' | 'fa';
 export type ThemeId =
-  | 'nuvio'
+  | 'streamovie'
   | 'netflix'
   | 'midnight'
   | 'aurora'

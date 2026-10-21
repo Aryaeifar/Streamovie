@@ -113,14 +113,14 @@ export function ProfileScreen({
   const [tvCategory, setTvCategory] = useState<TVSettingsCategory>('appearance');
   const [focusedKey, setFocusedKey] = useState<string | null>(null);
 
-  if (!visible) return null;
+  if (!visible || isTV) return null;
 
   const activeProfileObj =
     HOUSEHOLD_PROFILES.find(p => p.id === activeProfile) ??
     HOUSEHOLD_PROFILES[0];
 
   const handleResetDefaults = () => {
-    onTheme('nuvio');
+    onTheme('streamovie');
     setLiquidGlass(true);
     setLandscapeCards(false);
     setTvHomeLayout('modern');
@@ -129,7 +129,7 @@ export function ProfileScreen({
   };
 
   // ============================================================================
-  // ANDROID TV: NuvioTV Hub-and-Spoke Two-Pane Settings & Profile Architecture
+  // ANDROID TV: Settings & Profile removed on Android TV
   // ============================================================================
   if (isTV) {
     const tvCategories: {
@@ -166,7 +166,7 @@ export function ProfileScreen({
       },
       {
         id: 'about',
-        title: 'About Nuvio TV',
+        title: 'About Streamovie TV',
         subtitle: 'v1.1.0 • Streamovie Engine',
         glyph: 'ⓘ',
       },
@@ -203,7 +203,7 @@ export function ProfileScreen({
         {/* Top Header */}
         <View style={tvStyles.headerBar}>
           <View>
-            <Text style={tvStyles.headerEyebrow}>NUVIO TV CONFIGURATION</Text>
+            <Text style={tvStyles.headerEyebrow}>STREAMOVIE TV CONFIGURATION</Text>
             <Text style={tvStyles.headerTitle}>Settings & Profiles</Text>
           </View>
           <Pressable
@@ -372,7 +372,7 @@ export function ProfileScreen({
               <View style={[tvStyles.stageCard, {backgroundColor: palette.panel}]}>
                 <Text style={tvStyles.stageHeading}>Color Theme & Palette</Text>
                 <Text style={tvStyles.stageDesc}>
-                  Select a signature Nuvio TV theme palette. Accent colors, focus
+                  Select a signature Streamovie TV theme palette. Accent colors, focus
                   rings, and ambient backdrops update immediately.
                 </Text>
 
@@ -426,7 +426,7 @@ export function ProfileScreen({
                                 fontSize: 14,
                                 fontWeight: '900',
                               }}>
-                              N
+                              S
                             </Text>
                           </View>
                         </View>
@@ -458,7 +458,7 @@ export function ProfileScreen({
             {tvCategory === 'layout' ? (
               <View style={[tvStyles.stageCard, {backgroundColor: palette.panel}]}>
                 <Text style={tvStyles.stageHeading}>
-                  Nuvio TV Home View & Poster Mode
+                  Streamovie TV Home View & Poster Mode
                 </Text>
                 <Text style={tvStyles.stageDesc}>
                   Choose between Modern, Classic, or Grid Home layouts and toggle
@@ -550,16 +550,16 @@ export function ProfileScreen({
 
             {tvCategory === 'about' ? (
               <View style={[tvStyles.stageCard, {backgroundColor: palette.panel}]}>
-                <Text style={tvStyles.stageHeading}>About Streamovie • Nuvio TV</Text>
+                <Text style={tvStyles.stageHeading}>About Streamovie TV</Text>
                 <Text style={tvStyles.stageDesc}>
-                  10-foot Android TV interface modeled after NuvioTV with D-pad
+                  10-foot Android TV interface for Streamovie with D-pad
                   focus navigation, dynamic hero stage, and multi-source playback.
                 </Text>
 
                 <View style={tvStyles.aboutList}>
                   <View style={tvStyles.aboutItem}>
                     <Text style={tvStyles.aboutKey}>Application Version</Text>
-                    <Text style={tvStyles.aboutVal}>1.1.0 (Nuvio TV UI)</Text>
+                    <Text style={tvStyles.aboutVal}>1.1.0 (Streamovie TV UI)</Text>
                   </View>
                   <View style={tvStyles.aboutItem}>
                     <Text style={tvStyles.aboutKey}>Platform Target</Text>
@@ -1184,7 +1184,7 @@ export function ProfileScreen({
                 <View style={mobileStyles.infoRow}>
                   <Text style={mobileStyles.infoLabel}>Release Version</Text>
                   <View style={mobileStyles.infoBadge}>
-                    <Text style={mobileStyles.infoBadgeText}>v1.1.0 • Nuvio</Text>
+                    <Text style={mobileStyles.infoBadgeText}>v1.1.0 • Streamovie</Text>
                   </View>
                 </View>
 
