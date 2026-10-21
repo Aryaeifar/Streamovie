@@ -1,5 +1,5 @@
 import {createContext} from 'react';
-import type {Locale, ThemeId} from '../types/media';
+import type {Locale, ProfileId, ThemeId, TVHomeLayout} from '../types/media';
 
 export type AppSettings = {
   theme: ThemeId;
@@ -9,12 +9,16 @@ export type AppSettings = {
   showTop250Series: boolean;
   liquidGlass: boolean;
   landscapeCards: boolean;
+  tvHomeLayout: TVHomeLayout;
+  activeProfile: ProfileId;
   setTheme: (value: ThemeId) => void;
   setLocale: (value: Locale) => void;
   setShowTop250Movies: (value: boolean) => void;
   setShowTop250Series: (value: boolean) => void;
   setLiquidGlass: (value: boolean) => void;
   setLandscapeCards: (value: boolean) => void;
+  setTvHomeLayout: (value: TVHomeLayout) => void;
+  setActiveProfile: (value: ProfileId) => void;
   openSettings: () => void;
   closeSettings: () => void;
   settingsOpen: boolean;
@@ -28,12 +32,16 @@ export const SettingsContextDefault: AppSettings = {
   showTop250Series: true,
   liquidGlass: true,
   landscapeCards: false,
+  tvHomeLayout: 'modern',
+  activeProfile: 'main',
   setTheme: () => {},
   setLocale: () => {},
   setShowTop250Movies: () => {},
   setShowTop250Series: () => {},
   setLiquidGlass: () => {},
   setLandscapeCards: () => {},
+  setTvHomeLayout: () => {},
+  setActiveProfile: () => {},
   openSettings: () => {},
   closeSettings: () => {},
   settingsOpen: false,
