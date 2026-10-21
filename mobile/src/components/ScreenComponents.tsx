@@ -1,8 +1,16 @@
-import React, {type ReactNode} from 'react';
-import {FlatList, Platform, ScrollView, View} from 'react-native';
+import React, {useContext, useState, type ReactNode} from 'react';
+import {FlatList, Platform, Pressable, ScrollView, StyleSheet, View} from 'react-native';
 import type {AppTab, Genre, Locale, Media} from '../types/media';
+import {SettingsContext} from '../context/settings';
+import {THEMES} from '../lib/theme';
 import {Action} from './ui/Button';
-import {MediaCard, MediaRail, SiteFooter, Spotlight} from './legacy-ui';
+import {Text} from './ui/Text';
+import {
+  MediaCard,
+  MediaRail,
+  Spotlight,
+  TVHeroStage,
+} from './legacy-ui';
 import {styles} from './styles';
 import {EmptyState, ErrorMessage} from './ui/States';
 
@@ -49,12 +57,129 @@ export function HomeScreen({
   isSaved?: (item: Media) => boolean;
   onNavigate: (tab: AppTab) => void;
 }) {
+  const {tvHomeLayout, setTvHomeLayout, theme} = useContext(SettingsContext);
+  const accent = THEMES[theme].accent;
   const featured = items.slice(0, 8);
   const continueItems =
     savedItems.length > 0 ? savedItems.slice(0, 12) : items.slice(1, 9);
 
-  // On Android TV (NuvioTV layout from the screenshot), Featured & Catalog rows are displayed with large portrait cards and "from Streamovie Catalog" subtitle
+  const [focusedHeroItem, setFocusedHeroItem] = useState<Media | null>(null);
+  const [tvGridFilter, setTvGridFilter] = useState<
+    'all' | 'movies' | 'series' | 'topMovies' | 'topSeries'
+  >('all');
+  const [focusedGridTab, setFocusedGridTab] = useState<string | null>(null);
+
+  const activeHeroItem = focusedHeroItem ?? items[0] ?? null;
+
+  // Android TV: NuvioTV 10-Foot Experience (Modern / Classic / Grid Home Layouts)
   if (isTV) {
+    if (tvHomeLayout === 'grid') {
+      const gridData =
+        tvGridFilter === 'movies'
+          ? movies
+          : tvGridFilter === 'series'
+          ? series
+          : tvGridFilter === 'topMovies'
+          ? topMovies
+          : tvGridFilter === 'topSeries'
+          ? topSeries
+          : items;
+
+      const gridTabs: {
+        id: 'all' | 'movies' | 'series' | 'topMovies' | 'topSeries';
+        label: string;
+      }[] = [
+        {id: 'all', label: 'All Catalog'},
+        {id: 'movies', label: 'Movies'},
+        {id: 'series', label: 'Series'},
+        ...(showTop250Movies
+          ? [{id: 'topMovies' as const, label: 'Top 250 Movies'}]
+          : []),
+        ...(showTop250Series
+          ? [{id: 'topSeries' as const, label: 'Top 250 Series'}]
+          : []),
+      ];
+
+      return (
+        <FlatList
+          key="tv-grid-home-5"
+          data={gridData}
+          numColumns={5}
+          initialNumToRender={10}
+          maxToRenderPerBatch={15}
+          windowSize={7}
+          keyExtractor={(item, index) => `tv-grid-${item.kind}-${item.id}-${index}`}
+          ListHeaderComponent={
+            <View style={{marginHorizontal: -40, marginBottom: 18}}>
+              {activeHeroItem ? (
+                <TVHeroStage
+                  item={activeHeroItem}
+                  featuredItems={featured}
+                  isSaved={isSaved ? isSaved(activeHeroItem) : false}
+                  tvHomeLayout={tvHomeLayout}
+                  onOpen={onOpen}
+                  onToggleSave={onToggleSave}
+                  onSelectLayout={setTvHomeLayout}
+                />
+              ) : null}
+              {error ? <ErrorMessage message={error} /> : null}
+              <View style={tvHomeExtraStyles.gridFilterRow}>
+                {gridTabs.map(tabItem => {
+                  const active = tvGridFilter === tabItem.id;
+                  const focused = focusedGridTab === tabItem.id;
+                  return (
+                    <Pressable
+                      key={tabItem.id}
+                      accessibilityRole="button"
+                      onFocus={() => setFocusedGridTab(tabItem.id)}
+                      onBlur={() => setFocusedGridTab(null)}
+                      onPress={() => setTvGridFilter(tabItem.id)}
+                      style={[
+                        styles.action,
+                        active && styles.actionActive,
+                        focused && [styles.focused, {borderColor: accent}],
+                      ]}>
+                      <Text
+                        style={[
+                          styles.actionText,
+                          active && styles.actionTextActive,
+                        ]}>
+                        {tabItem.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          }
+          contentContainerStyle={[styles.listContent, styles.listContentTV]}
+          columnWrapperStyle={styles.gridRowTV}
+          renderItem={({item, index}) => (
+            <MediaCard
+              item={item}
+              isTV
+              rank={
+                tvGridFilter === 'topMovies' || tvGridFilter === 'topSeries'
+                  ? index + 1
+                  : undefined
+              }
+              onFocusItem={setFocusedHeroItem}
+              onPress={() => onOpen(item)}
+            />
+          )}
+          ListEmptyComponent={
+            loading ? null : (
+              <EmptyState
+                locale={locale}
+                message={error || 'No titles to show.'}
+              />
+            )
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      );
+    }
+
     return (
       <ScrollView
         ref={scrollRef}
@@ -63,7 +188,86 @@ export function HomeScreen({
         scrollEventThrottle={16}
         contentContainerStyle={[styles.homeContent, styles.homeContentTV]}>
         {header}
+
+        {/* NuvioTV Hero Stage: Modern (Focus-Synced Full-Bleed Backdrop) or Classic (Carousel) */}
+        {tvHomeLayout === 'classic' ? (
+          <View>
+            <View style={tvHomeExtraStyles.classicTopBar}>
+              <View style={styles.tvHeroLiveBadge}>
+                <View
+                  style={[styles.tvHeroLiveDot, {backgroundColor: accent}]}
+                />
+                <Text style={styles.tvHeroLiveText}>
+                  NUVIO TV  •  CLASSIC VIEW
+                </Text>
+              </View>
+              <View style={styles.tvLayoutSwitcher}>
+                {(['modern', 'classic', 'grid'] as const).map(mode => {
+                  const active = tvHomeLayout === mode;
+                  return (
+                    <Pressable
+                      key={mode}
+                      accessibilityRole="button"
+                      onPress={() => setTvHomeLayout(mode)}
+                      style={[
+                        styles.tvLayoutPill,
+                        active && styles.tvLayoutPillActive,
+                      ]}>
+                      <Text
+                        style={[
+                          styles.tvLayoutPillText,
+                          active && styles.tvLayoutPillTextActive,
+                        ]}>
+                        {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+            {items[0] ? (
+              <Spotlight
+                item={items[0]}
+                featuredItems={featured}
+                onPress={() => onOpen(items[0])}
+                onOpenItem={onOpen}
+                onToggleSave={onToggleSave}
+                isSaved={isSaved}
+                isTV
+              />
+            ) : null}
+          </View>
+        ) : activeHeroItem ? (
+          <TVHeroStage
+            item={activeHeroItem}
+            featuredItems={featured}
+            isSaved={isSaved ? isSaved(activeHeroItem) : false}
+            tvHomeLayout={tvHomeLayout}
+            onOpen={onOpen}
+            onToggleSave={onToggleSave}
+            onSelectLayout={setTvHomeLayout}
+          />
+        ) : null}
+
         {error ? <ErrorMessage message={error} /> : null}
+
+        {/* NuvioTV Continue Watching Row (Landscape 16:9 Backdrops with Time Badge & Progress Bar) */}
+        {continueItems.length > 0 ? (
+          <MediaRail
+            title="Continue Watching"
+            subtitle={
+              savedItems.length > 0
+                ? 'from Your Personal Library'
+                : 'Resume where you left off'
+            }
+            items={continueItems}
+            width={width}
+            isTV
+            continueWatching
+            onFocusItem={setFocusedHeroItem}
+            onSelect={onOpen}
+          />
+        ) : null}
 
         <View
           onLayout={event => {
@@ -75,8 +279,10 @@ export function HomeScreen({
             items={items.slice(0, 18)}
             width={width}
             isTV
-            highlightFirstOnTV
+            highlightFirstOnTV={!focusedHeroItem}
+            onFocusItem={setFocusedHeroItem}
             onSelect={onOpen}
+            onSeeAll={() => onNavigate('Trending')}
           />
         </View>
 
@@ -90,7 +296,9 @@ export function HomeScreen({
             items={series.slice(0, 20)}
             width={width}
             isTV
+            onFocusItem={setFocusedHeroItem}
             onSelect={onOpen}
+            onSeeAll={() => onNavigate('Series')}
           />
         </View>
 
@@ -104,7 +312,9 @@ export function HomeScreen({
             items={movies.slice(0, 20)}
             width={width}
             isTV
+            onFocusItem={setFocusedHeroItem}
             onSelect={onOpen}
+            onSeeAll={() => onNavigate('Movies')}
           />
         </View>
 
@@ -120,7 +330,9 @@ export function HomeScreen({
               width={width}
               isTV
               ranked
+              onFocusItem={setFocusedHeroItem}
               onSelect={onOpen}
+              onSeeAll={() => onNavigate('Top Movies')}
             />
           </View>
         ) : null}
@@ -137,7 +349,9 @@ export function HomeScreen({
               width={width}
               isTV
               ranked
+              onFocusItem={setFocusedHeroItem}
               onSelect={onOpen}
+              onSeeAll={() => onNavigate('Top Series')}
             />
           </View>
         ) : null}
@@ -152,7 +366,7 @@ export function HomeScreen({
     );
   }
 
-  // Mobile & Tablet NuvioMobile Home Layout (matching reference screenshot)
+  // Mobile & Tablet NuvioMobile Home Layout (Unchanged)
   return (
     <ScrollView
       ref={scrollRef}
@@ -254,6 +468,24 @@ export function HomeScreen({
   );
 }
 
+const tvHomeExtraStyles = StyleSheet.create({
+  classicTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 40,
+    paddingTop: 20,
+    paddingBottom: 4,
+  },
+  gridFilterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    paddingHorizontal: 40,
+    paddingTop: 6,
+  },
+});
+
 export function CatalogScreen({
   header,
   data,
@@ -305,7 +537,7 @@ export function CatalogScreen({
         styles.listContent,
         isTV && styles.listContentTV,
       ]}
-      columnWrapperStyle={styles.gridRow}
+      columnWrapperStyle={isTV ? styles.gridRowTV : styles.gridRow}
       renderItem={({item}) => (
         <MediaCard item={item} isTV={isTV} onPress={() => onSelect(item)} />
       )}

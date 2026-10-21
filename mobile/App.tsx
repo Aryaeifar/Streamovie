@@ -38,9 +38,11 @@ import type {
   Locale,
   Media,
   MediaKind,
+  ProfileId,
   Season,
   Source,
   ThemeId,
+  TVHomeLayout,
 } from './src/types/media';
 import {SettingsContext, type AppSettings} from './src/context/settings';
 import {styles} from './src/components/styles';
@@ -184,10 +186,18 @@ function App() {
               loadMedia('movie', apiKey),
               loadMedia('series', apiKey),
               tab === 'Home' && showTop250Movies
-                ? Promise.all(Array.from({length: 6}, (_, page) => loadMedia('movie', apiKey, '', 'imdb', page))).then((pages) => pages.flat())
+                ? Promise.all(
+                    Array.from({length: 6}, (_, page) =>
+                      loadMedia('movie', apiKey, '', 'imdb', page),
+                    ),
+                  ).then(pages => pages.flat())
                 : Promise.resolve([]),
               tab === 'Home' && showTop250Series
-                ? Promise.all(Array.from({length: 6}, (_, page) => loadMedia('series', apiKey, '', 'imdb', page))).then((pages) => pages.flat())
+                ? Promise.all(
+                    Array.from({length: 6}, (_, page) =>
+                      loadMedia('series', apiKey, '', 'imdb', page),
+                    ),
+                  ).then(pages => pages.flat())
                 : Promise.resolve([]),
             ]);
             const all = [...movies, ...series];
@@ -206,7 +216,13 @@ function App() {
         } else {
           const isTopTab = tab.startsWith('Top ');
           const loaded = isTopTab
-            ? (await Promise.all(Array.from({length: 6}, (_, page) => loadMedia(activeKind, apiKey, searchText, 'imdb', page)))).flat()
+            ? (
+                await Promise.all(
+                  Array.from({length: 6}, (_, page) =>
+                    loadMedia(activeKind, apiKey, searchText, 'imdb', page),
+                  ),
+                )
+              ).flat()
             : await loadMedia(activeKind, apiKey, searchText, 'created');
           if (currentRequest === requestId.current) {
             setItems(isTopTab ? rankTop250(loaded, activeKind) : loaded);
@@ -251,11 +267,14 @@ function App() {
     }
   };
 
-  const navigateTo = useCallback((value: AppTab) => {
-    setSelected(null);
-    setTab(value);
-    closeSettings();
-  }, [closeSettings]);
+  const navigateTo = useCallback(
+    (value: AppTab) => {
+      setSelected(null);
+      setTab(value);
+      closeSettings();
+    },
+    [closeSettings],
+  );
 
   const saveKey = async () => {
     const key = keyInput.trim();
@@ -342,6 +361,19 @@ function App() {
   const fullBleedHome =
     !isTV && !selected && !settingsOpen && tab === 'Home' && !searchDraft.trim();
 
+  if (!apiKey) {
+    return (
+      <ApiKeyScreen
+        locale={locale}
+        isPersian={false}
+        palette={palette}
+        keyInput={keyInput}
+        onChangeKey={setKeyInput}
+        onSubmit={saveKey}
+      />
+    );
+  }
+
   const header = (
     <AppHeader
       selected={selected}
@@ -367,15 +399,15 @@ function App() {
   return (
     <SafeAreaView
       edges={
-        fullBleedHome
+        fullBleedHome || isTV
           ? ['right', 'bottom', 'left']
           : ['top', 'right', 'bottom', 'left']
       }
       style={[styles.safe, {backgroundColor: activeBg}]}>
       <StatusBar
-        translucent={fullBleedHome}
+        translucent={fullBleedHome || isTV}
         barStyle="light-content"
-        backgroundColor={fullBleedHome ? 'transparent' : activeBg}
+        backgroundColor={fullBleedHome || isTV ? 'transparent' : activeBg}
       />
       <View
         style={[
@@ -383,9 +415,11 @@ function App() {
           isTV && styles.tvAppFrame,
           {flexDirection: isTV ? 'row' : 'column'},
         ]}>
-        {isTV ? (
+        {/* NuvioTV Collapsible Navigation Drawer: Shown on root routes, hidden on full-screen Detail view */}
+        {isTV && !selected ? (
           <TVNavigation
             selected={tab}
+            settingsActive={settingsOpen}
             onSelect={value => {
               setSelected(null);
               setTab(value);
@@ -419,12 +453,16 @@ function App() {
           ) : selected ? (
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.detailScroll}>
-              {header}
+              contentContainerStyle={[
+                styles.detailScroll,
+                isTV && styles.detailScrollTV,
+              ]}>
+              {!isTV ? header : null}
               <Detail
                 item={selected}
                 isSaved={isItemSaved(selected)}
                 onSave={() => toggleSaved(selected)}
+                onBack={() => setSelected(null)}
                 seasons={seasons}
                 seasonIndex={seasonIndex}
                 onSeason={setSeasonIndex}
@@ -432,7 +470,7 @@ function App() {
                 isWide={isTablet}
                 onWatch={(source, title) => setPlaying({source, title})}
               />
-              <SiteFooter onNavigate={navigateTo} />
+              {!isTV ? <SiteFooter onNavigate={navigateTo} /> : null}
             </ScrollView>
           ) : tab === 'Home' && !searchDraft.trim() ? (
             <HomeScreen
@@ -506,7 +544,7 @@ function App() {
                   : 'No matching titles found.'
               }
               onRefresh={() => refresh(searchDraft)}
-              footer={isTV ? <SiteFooter onNavigate={navigateTo} /> : null}
+              footer={null}
             />
           )}
         </View>
@@ -539,6 +577,8 @@ export default function AppRoot() {
   const [showTop250Series, setShowTop250Series] = useState(true);
   const [liquidGlass, setLiquidGlass] = useState(true);
   const [landscapeCards, setLandscapeCards] = useState(false);
+  const [tvHomeLayout, setTvHomeLayout] = useState<TVHomeLayout>('modern');
+  const [activeProfile, setActiveProfile] = useState<ProfileId>('main');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
@@ -549,6 +589,8 @@ export default function AppRoot() {
       AsyncStorage.getItem('show-top250-series'),
       AsyncStorage.getItem('nuvio-liquid-glass'),
       AsyncStorage.getItem('nuvio-landscape-cards'),
+      AsyncStorage.getItem('nuvio-tv-home-layout'),
+      AsyncStorage.getItem('nuvio-active-profile'),
     ])
       .then(
         ([
@@ -557,6 +599,8 @@ export default function AppRoot() {
           savedTopSeries,
           savedGlass,
           savedLandscape,
+          savedTvLayout,
+          savedProfile,
         ]) => {
           if (savedTheme && savedTheme in THEMES) {
             setTheme(savedTheme as ThemeId);
@@ -566,6 +610,21 @@ export default function AppRoot() {
           if (savedTopSeries === 'false') setShowTop250Series(false);
           if (savedGlass === 'false') setLiquidGlass(false);
           if (savedLandscape === 'true') setLandscapeCards(true);
+          if (
+            savedTvLayout === 'modern' ||
+            savedTvLayout === 'classic' ||
+            savedTvLayout === 'grid'
+          ) {
+            setTvHomeLayout(savedTvLayout);
+          }
+          if (
+            savedProfile === 'main' ||
+            savedProfile === 'cinema' ||
+            savedProfile === 'night' ||
+            savedProfile === 'kids'
+          ) {
+            setActiveProfile(savedProfile);
+          }
           setPreferencesLoaded(true);
         },
       )
@@ -597,6 +656,16 @@ export default function AppRoot() {
       void AsyncStorage.setItem('nuvio-landscape-cards', String(landscapeCards));
     }
   }, [preferencesLoaded, landscapeCards]);
+  useEffect(() => {
+    if (preferencesLoaded) {
+      void AsyncStorage.setItem('nuvio-tv-home-layout', tvHomeLayout);
+    }
+  }, [preferencesLoaded, tvHomeLayout]);
+  useEffect(() => {
+    if (preferencesLoaded) {
+      void AsyncStorage.setItem('nuvio-active-profile', activeProfile);
+    }
+  }, [preferencesLoaded, activeProfile]);
 
   const value = useMemo<AppSettings>(
     () => ({
@@ -607,12 +676,16 @@ export default function AppRoot() {
       showTop250Series,
       liquidGlass,
       landscapeCards,
+      tvHomeLayout,
+      activeProfile,
       setTheme,
       setLocale,
       setShowTop250Movies,
       setShowTop250Series,
       setLiquidGlass,
       setLandscapeCards,
+      setTvHomeLayout,
+      setActiveProfile,
       openSettings: () => setSettingsOpen(true),
       closeSettings: () => setSettingsOpen(false),
       settingsOpen,
@@ -623,6 +696,8 @@ export default function AppRoot() {
       showTop250Series,
       liquidGlass,
       landscapeCards,
+      tvHomeLayout,
+      activeProfile,
       settingsOpen,
     ],
   );

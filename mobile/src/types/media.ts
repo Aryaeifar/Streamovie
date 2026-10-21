@@ -8,6 +8,8 @@ export type AppTab =
   | 'Saved'
   | 'Top Movies'
   | 'Top Series';
+export type TVHomeLayout = 'modern' | 'classic' | 'grid';
+export type ProfileId = 'main' | 'cinema' | 'night' | 'kids';
 export type Source = {quality: string; url: string};
 export type Genre = {id: number; title: string};
 export type Episode = {title: string; sources: Source[]};

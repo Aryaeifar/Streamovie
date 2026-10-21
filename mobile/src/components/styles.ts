@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
   tvAppFrame: {flexDirection: 'row'},
   mainContent: {flex: 1, minWidth: 0},
 
-  // Header & Top Search Area (NuvioMobile)
+  // Header & Top Search Area (NuvioMobile & NuvioTV)
   pageHeader: {
     paddingHorizontal: 16,
     paddingTop: 10,
@@ -28,8 +28,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 20,
-    paddingHorizontal: 36,
-    paddingTop: 20,
+    paddingHorizontal: 40,
+    paddingTop: 22,
     paddingBottom: 10,
   },
   brandRow: {
@@ -80,7 +80,13 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tvSearchRow: {flex: 1, maxWidth: 640, marginTop: 0, marginBottom: 0},
+  tvSearchRow: {
+    flex: 1,
+    maxWidth: 760,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 40,
+  },
 
   // Search & Filter Bar (NuvioMobile Glass Pill Search)
   searchRow: {
@@ -136,7 +142,7 @@ export const styles = StyleSheet.create({
 
   // Home Content
   homeContent: {paddingBottom: 104},
-  homeContentTV: {paddingTop: 18, paddingBottom: 56},
+  homeContentTV: {paddingTop: 0, paddingBottom: 64},
   homeSectionTabs: {
     alignSelf: 'center',
     flexDirection: 'row',
@@ -190,7 +196,7 @@ export const styles = StyleSheet.create({
     transform: [{scale: 1.03}],
   },
 
-  // Hero Carousel / Spotlight (Exact NuvioMobile & NuvioTV Match)
+  // Hero Carousel / Spotlight (Exact NuvioMobile & NuvioTV Classic Match)
   spotlightWrapper: {
     marginHorizontal: 0,
     marginTop: 0,
@@ -199,10 +205,10 @@ export const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   spotlightWrapperTV: {
-    marginHorizontal: 36,
-    marginTop: 6,
+    marginHorizontal: 40,
+    marginTop: 18,
     marginBottom: 28,
-    borderRadius: 22,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.14)',
   },
@@ -213,7 +219,7 @@ export const styles = StyleSheet.create({
     backgroundColor: COLORS.bg,
   },
   spotlightMobile: {height: 475},
-  spotlightTV: {height: 440},
+  spotlightTV: {height: 410},
   spotlightFocused: {
     borderWidth: 2.5,
     borderColor: '#58a6ff',
@@ -257,7 +263,7 @@ export const styles = StyleSheet.create({
   },
   spotlightContentTV: {
     alignItems: 'flex-start',
-    paddingHorizontal: 36,
+    paddingHorizontal: 40,
     paddingBottom: 28,
   },
   spotlightTitle: {
@@ -326,9 +332,200 @@ export const styles = StyleSheet.create({
   },
   heroLoading: {height: 420, alignItems: 'center', justifyContent: 'center'},
 
+  // NuvioTV Modern Home Hero Stage (Dynamic Focus-Synced Backdrop)
+  tvHeroStage: {
+    position: 'relative',
+    minHeight: 390,
+    justifyContent: 'space-between',
+    overflow: 'hidden',
+    marginBottom: 14,
+    paddingTop: 22,
+    paddingBottom: 24,
+    paddingHorizontal: 40,
+  },
+  tvHeroTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 5,
+  },
+  tvHeroBrandCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  tvHeroLiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(13, 17, 24, 0.76)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+  },
+  tvHeroLiveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  tvHeroLiveText: {
+    color: '#e6edf3',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  tvLayoutSwitcher: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    padding: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(12, 16, 23, 0.84)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  tvLayoutPill: {
+    paddingHorizontal: 13,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  tvLayoutPillActive: {
+    backgroundColor: 'rgba(255,255,255,0.14)',
+  },
+  tvLayoutPillText: {
+    color: '#8b949e',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  tvLayoutPillTextActive: {
+    color: '#ffffff',
+  },
+  tvHeroBody: {
+    maxWidth: 680,
+    zIndex: 5,
+    marginTop: 28,
+  },
+  tvHeroBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 10,
+  },
+  tvHeroTypeBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+  },
+  tvHeroTypeBadgeText: {
+    color: '#ffffff',
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  tvHeroImdbBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: 'rgba(251, 191, 36, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.45)',
+  },
+  tvHeroImdbText: {
+    color: '#fbbf24',
+    fontSize: 11.5,
+    fontWeight: '800',
+  },
+  tvHeroMetaPill: {
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: 'rgba(13, 17, 24, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  tvHeroMetaPillText: {
+    color: '#d0d7de',
+    fontSize: 11.5,
+    fontWeight: '600',
+  },
+  tvHeroTitle: {
+    color: '#ffffff',
+    fontSize: 42,
+    lineHeight: 48,
+    fontWeight: '800',
+    letterSpacing: -0.7,
+    textShadowColor: 'rgba(0,0,0,0.85)',
+    textShadowOffset: {width: 0, height: 3},
+    textShadowRadius: 14,
+  },
+  tvHeroOverview: {
+    color: 'rgba(230, 237, 243, 0.86)',
+    fontSize: 14.5,
+    lineHeight: 22,
+    marginTop: 10,
+    maxWidth: 620,
+    textShadowColor: 'rgba(0,0,0,0.75)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 6,
+  },
+  tvHeroActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 18,
+  },
+  tvHeroPrimaryBtn: {
+    minHeight: 44,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2.5,
+    borderColor: '#ffffff',
+  },
+  tvHeroPrimaryBtnText: {
+    color: '#07090d',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tvHeroSecondaryBtn: {
+    minHeight: 44,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: 'rgba(18, 23, 33, 0.84)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  tvHeroSecondaryBtnText: {
+    color: '#f0f4f8',
+    fontSize: 13.5,
+    fontWeight: '700',
+  },
+
   // Nuvio Media Rails & Section Headings
   rail: {marginBottom: 22},
-  railTV: {marginBottom: 30},
+  railTV: {marginBottom: 28},
   railHeading: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -337,8 +534,8 @@ export const styles = StyleSheet.create({
     marginBottom: 11,
   },
   railHeadingTV: {
-    paddingHorizontal: 36,
-    marginBottom: 14,
+    paddingHorizontal: 40,
+    marginBottom: 13,
   },
   railHeadingCopy: {flex: 1},
   railTitle: {
@@ -348,8 +545,8 @@ export const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   railTitleTV: {
-    fontSize: 26,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     letterSpacing: -0.4,
   },
   railSubtitle: {
@@ -359,9 +556,9 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
   railSubtitleTV: {
-    fontSize: 14,
-    color: '#7d8597',
-    marginTop: 3,
+    fontSize: 13,
+    color: '#8b949e',
+    marginTop: 2,
   },
   railMoreBtn: {
     paddingHorizontal: 8,
@@ -373,7 +570,7 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
   },
   railContent: {gap: 10, paddingHorizontal: 16, paddingBottom: 4},
-  railContentTV: {gap: 18, paddingHorizontal: 36, paddingBottom: 8},
+  railContentTV: {gap: 18, paddingHorizontal: 40, paddingBottom: 10, paddingTop: 4},
   railCard: {flexShrink: 0},
 
   // Portrait & Continue-Watching Landscape Cards (Exact NuvioMobile & NuvioTV Match)
@@ -386,7 +583,7 @@ export const styles = StyleSheet.create({
   cardTV: {paddingBottom: 6},
   cardLandscape: {paddingBottom: 2},
   cardFocused: {
-    transform: [{scale: 1.02}],
+    transform: [{scale: 1.035}],
   },
   posterFrame: {
     position: 'relative',
@@ -398,11 +595,11 @@ export const styles = StyleSheet.create({
   },
   posterFrameTV: {
     borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.16)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
   },
   posterFrameFocused: {
-    borderWidth: 2.5,
+    borderWidth: 3,
     borderColor: '#58a6ff',
   },
   landscapeFrame: {
@@ -430,7 +627,9 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: 'rgba(9, 12, 18, 0.78)',
+    backgroundColor: 'rgba(9, 12, 18, 0.82)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   continueBadgeText: {
     color: '#e6edf3',
@@ -469,14 +668,14 @@ export const styles = StyleSheet.create({
   },
   continueProgressTrack: {
     width: '100%',
-    height: 2.5,
+    height: 3,
     borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.20)',
-    marginTop: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    marginTop: 6,
     overflow: 'hidden',
   },
   continueProgressFill: {
-    width: 24,
+    width: '42%',
     height: '100%',
     borderRadius: 2,
     backgroundColor: '#ffffff',
@@ -488,9 +687,9 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
-    backgroundColor: 'rgba(7, 9, 13, 0.82)',
+    backgroundColor: 'rgba(7, 9, 13, 0.84)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.16)',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   posterRankText: {
     color: '#ffffff',
@@ -502,13 +701,13 @@ export const styles = StyleSheet.create({
     right: 7,
     top: 7,
     color: '#fbbf24',
-    backgroundColor: 'rgba(7, 9, 13, 0.82)',
+    backgroundColor: 'rgba(7, 9, 13, 0.84)',
     overflow: 'hidden',
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    fontSize: 9.5,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
   },
   cardTitle: {
     color: '#f0f4f8',
@@ -519,10 +718,10 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 1,
   },
   cardTitleTV: {
-    fontSize: 16.5,
-    fontWeight: '600',
-    lineHeight: 21,
-    marginTop: 9,
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 20,
+    marginTop: 8,
   },
   meta: {
     color: '#7d8597',
@@ -532,13 +731,13 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 1,
   },
   metaTV: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     marginTop: 2,
   },
 
   // Catalog / Search Grid & Nuvio Filter Chips
   listContent: {paddingHorizontal: 16, paddingBottom: 110},
-  listContentTV: {paddingHorizontal: 36, paddingBottom: 56},
+  listContentTV: {paddingHorizontal: 40, paddingBottom: 64},
   listIntro: {
     marginTop: 6,
     marginBottom: 10,
@@ -581,6 +780,7 @@ export const styles = StyleSheet.create({
     marginBottom: 2,
   },
   gridRow: {gap: 10, marginBottom: 14},
+  gridRowTV: {gap: 18, marginBottom: 20},
 
   // Mobile Floating Liquid Glass Bottom Bar
   bottomNav: {
@@ -612,47 +812,76 @@ export const styles = StyleSheet.create({
   bottomNavLabel: {color: '#8b949e', fontSize: 10, fontWeight: '600'},
   bottomNavActive: {color: '#ffffff'},
 
-  // NuvioTV Sidebar Navigation Rail
+  // NuvioTV Collapsible Sidebar Navigation Drawer (76px collapsed -> 228px expanded on focus)
   tvNavigation: {
-    width: 82,
+    width: 78,
     alignItems: 'center',
     borderRightWidth: 1,
     borderRightColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: '#090c12',
+    backgroundColor: '#080b11',
     paddingTop: 22,
     paddingBottom: 20,
+    paddingHorizontal: 10,
     justifyContent: 'space-between',
+    zIndex: 20,
+  },
+  tvNavigationExpanded: {
+    width: 228,
+    alignItems: 'stretch',
+    paddingHorizontal: 14,
+    backgroundColor: '#090d14',
+    borderRightColor: 'rgba(255,255,255,0.14)',
+  },
+  tvBrandHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+    paddingHorizontal: 4,
   },
   tvBrandMark: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 13,
     backgroundColor: COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
   },
   tvNavigationItems: {
     flex: 1,
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     width: '100%',
-    paddingHorizontal: 8,
   },
   tvNavigationItem: {
     width: '100%',
-    minHeight: 50,
+    minHeight: 48,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderWidth: 2,
     borderColor: 'transparent',
-    gap: 3,
+    gap: 4,
+    position: 'relative',
+  },
+  tvNavigationItemExpanded: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 12,
+    gap: 12,
+  },
+  tvNavActiveBar: {
+    position: 'absolute',
+    left: 2,
+    top: 12,
+    bottom: 12,
+    width: 3.5,
+    borderRadius: 2,
   },
   tvNavigationSelected: {
-    backgroundColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.09)',
   },
   tvNavigationFocused: {
     borderColor: '#58a6ff',
@@ -665,10 +894,17 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
+  tvNavigationLabelExpanded: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    textAlign: 'left',
+    flex: 1,
+  },
   tvNavigationTextActive: {color: '#ffffff', fontWeight: '700'},
 
   // Detail Screen & Nuvio Stream Picker Sheet
   detailScroll: {paddingBottom: 104},
+  detailScrollTV: {paddingBottom: 64},
   detail: {paddingHorizontal: 0, paddingTop: 0, paddingBottom: 28},
   detailHero: {
     position: 'relative',
@@ -791,7 +1027,7 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(18, 22, 31, 0.90)',
   },
   sectionTV: {
-    marginHorizontal: 36,
+    marginHorizontal: 40,
     padding: 24,
   },
   panelHeading: {
@@ -937,7 +1173,7 @@ export const styles = StyleSheet.create({
   },
   streamSheetTV: {
     width: '100%',
-    maxWidth: 700,
+    maxWidth: 760,
     borderRadius: 24,
   },
   streamSheetHandle: {
