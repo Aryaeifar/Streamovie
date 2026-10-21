@@ -11,6 +11,8 @@ type Props = {
   tab: AppTab;
   searchDraft: string;
   isTV: boolean;
+  isSearching?: boolean;
+  resultCount?: number;
   palette: (typeof THEMES)[keyof typeof THEMES];
   locale: Locale;
   isPersian: boolean;
@@ -28,6 +30,8 @@ export function AppHeader({
   tab,
   searchDraft,
   isTV,
+  isSearching = false,
+  resultCount,
   palette,
   onBack,
   onSearchChange,
@@ -52,7 +56,7 @@ export function AppHeader({
   }
 
   return (
-    <View style={{paddingTop: 10, paddingBottom: 6}}>
+    <View style={{paddingTop: isTV ? 16 : 10, paddingBottom: 6}}>
       {tab !== 'Saved' ? (
         <View style={isTV ? styles.tvSearchRow : undefined}>
           <SearchFilterBar
@@ -60,7 +64,11 @@ export function AppHeader({
             placeholder="Search movies, series, genres..."
             isPersian={false}
             accent={palette.accent}
+            isTV={isTV}
+            isSearching={isSearching}
+            resultCount={resultCount}
             filtersOpen={filtersOpen}
+            showSuggestions={tab === 'Search'}
             onChange={onSearchChange}
             onSubmit={onSearchSubmit}
             onToggleFilters={onToggleFilters}

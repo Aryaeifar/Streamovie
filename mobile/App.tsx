@@ -31,6 +31,7 @@ import {
   loadSeasons,
   searchHome,
 } from './src/lib/catalog-api';
+import {useDebouncedValue} from './src/lib/use-debounced-value';
 
 import type {
   AppTab,
@@ -105,6 +106,8 @@ function App() {
   const [error, setError] = useState('');
   const requestId = useRef(0);
   const [searchDraft, setSearchDraft] = useState('');
+  const debouncedSearch = useDebouncedValue(searchDraft, 350);
+  const isDebouncing = searchDraft.trim() !== debouncedSearch.trim();
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   useEffect(() => {
@@ -151,6 +154,10 @@ function App() {
           setSelected(null);
           return true;
         }
+        if (searchDraft.trim()) {
+          setSearchDraft('');
+          return true;
+        }
         if (tab !== 'Home') {
           setTab('Home');
           return true;
@@ -159,7 +166,7 @@ function App() {
       },
     );
     return () => subscription.remove();
-  }, [playing, isTV, settingsOpen, selected, tab, closeSettings]);
+  }, [playing, isTV, settingsOpen, selected, searchDraft, tab, closeSettings]);
 
   // Enforce LTR English layout
   useEffect(() => {
@@ -239,20 +246,14 @@ function App() {
     [activeKind, apiKey, showTop250Movies, showTop250Series, tab],
   );
 
+  // Debounced search & tab refresh effect
   useEffect(() => {
-    if (apiKey && !selected) refresh('');
+    if (!apiKey || selected || tab === 'Saved') return;
+    void refresh(debouncedSearch);
     return () => {
       requestId.current += 1;
     };
-  }, [apiKey, tab, selected, refresh]);
-
-  useEffect(() => {
-    if (!searchDraft.trim() || selected || tab === 'Saved') return;
-    const timeout = setTimeout(() => {
-      void refresh(searchDraft);
-    }, 350);
-    return () => clearTimeout(timeout);
-  }, [searchDraft, selected, tab, refresh]);
+  }, [apiKey, tab, selected, debouncedSearch, refresh]);
 
   const open = async (item: Media) => {
     setSelected(item);
@@ -357,7 +358,7 @@ function App() {
     [visibleItems, sortByRating],
   );
 
-  const activeBg = isTV ? palette.tvBg ?? palette.bg : palette.bg;
+  const activeBg = isTV ? '#06070a' : palette.bg;
   const fullBleedHome =
     !isTV && !selected && !settingsOpen && tab === 'Home' && !searchDraft.trim();
 
@@ -380,6 +381,8 @@ function App() {
       tab={tab}
       searchDraft={searchDraft}
       isTV={isTV}
+      isSearching={isDebouncing || (loading && Boolean(searchDraft.trim()))}
+      resultCount={orderedItems.length}
       palette={palette}
       locale="en"
       isPersian={false}
@@ -391,7 +394,6 @@ function App() {
       onToggleFilters={() => setFiltersOpen(value => !value)}
       onClearSearch={() => {
         setSearchDraft('');
-        void refresh('');
       }}
     />
   );
@@ -415,8 +417,8 @@ function App() {
           isTV && styles.tvAppFrame,
           {flexDirection: isTV ? 'row' : 'column'},
         ]}>
-        {/* Streamovie TV Web-Style Sidebar Navigation */}
-        {isTV ? (
+        {/* Paramount+ Style Left Vertical Navigation Rail (Shown on root TV screens) */}
+        {isTV && !selected ? (
           <TVNavigation
             selected={tab}
             onSelect={value => {
@@ -500,7 +502,7 @@ function App() {
               columns={columns}
               isTV={isTV}
               locale="en"
-              loading={loading}
+              loading={loading || isDebouncing}
               error={error}
               intro={
                 <CatalogIntro
@@ -511,7 +513,11 @@ function App() {
                       ? `Results for "${searchDraft.trim()}"`
                       : sectionTitle
                   }
-                  sectionSubtitle={sectionSubtitle}
+                  sectionSubtitle={
+                    isDebouncing
+                      ? 'Searching Streamovie catalog…'
+                      : sectionSubtitle
+                  }
                   count={orderedItems.length}
                 />
               }
@@ -541,7 +547,7 @@ function App() {
                   ? 'Save movies or series to your library to find them here.'
                   : 'No matching titles found.'
               }
-              onRefresh={() => refresh(searchDraft)}
+              onRefresh={() => refresh(debouncedSearch)}
               footer={null}
             />
           )}
